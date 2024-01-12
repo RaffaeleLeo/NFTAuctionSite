@@ -11,3 +11,4 @@ REPORT_GAS=true npx hardhat test
 npx hardhat node
 npx hardhat run scripts/deploy.ts
 ```
+We need to replace "https://mytokenmetadata.com/nft/1" in the nft minting function with some actual metadata
