@@ -2,16 +2,16 @@ import { ethers } from "hardhat";
 
 async function main() {
     const [owner] = await ethers.getSigners();
-    const NFT = await ethers.getContractFactory("MyNFT");
+    const NFT = await ethers.getContractFactory("NFT");
     const nft = await NFT.deploy();
 
-    await nft.deployed();
-    console.log("NFT Contract deployed to:", nft.address);
+    console.log("NFT Contract deployed to:", nft.tokenURI);
 
     const tokenURI = "https://mytokenmetadata.com/nft/1";
     const txn = await nft.mintNFT(owner.address, tokenURI);
     await txn.wait();
 
+    console.log("chainId: ", txn.blockNumber)
     console.log("NFT minted:", txn.hash);
 }
 
