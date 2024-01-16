@@ -44,7 +44,6 @@ contract dutchAuction {
         require(block.timestamp < expiresAt, "This auction has ended");
 
         uint price = getPrice();
-        console.log(msg.value);
         require(msg.value >= price, "The amount of ETH sent is less than the price of token");
 
         nft.safeTransferFrom(seller,msg.sender,nftId);
