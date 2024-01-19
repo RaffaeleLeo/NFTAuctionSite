@@ -6,7 +6,6 @@ import { ethers} from "hardhat";
 
 describe("Auction", function () {
 
-
   async function deploy() {
     
     const [owner, bidder1,bidder2] = await ethers.getSigners();
@@ -19,7 +18,10 @@ describe("Auction", function () {
     const reservePrice = 100
 
     const AuctionFactory = await ethers.getContractFactory("Auction");
-    const Auction = await AuctionFactory.deploy(owner,tokenId,reservePrice);
+    const Auction = await AuctionFactory.deploy(NFT,tokenId,reservePrice);
+
+    //lets the auction sell the owner's token
+    await NFT.approve(Auction,tokenId);
 
     return {Auction,NFT,owner,bidder1,bidder2, tokenId,reservePrice}
   }
@@ -45,11 +47,6 @@ describe("Auction", function () {
         const {Auction, tokenId} = await loadFixture(deploy);
         expect(await Auction.tokenId()).to.equal(tokenId);
       });
-
-      // it("Auction NFT Contract", async function () {
-      //   const {Auction, owner} = await loadFixture(deploy);
-      //   expect(await Auction.nftContract()).to.equal(owner);
-      // });
 
       it("Auction start price 0", async function () {
         const {Auction} = await loadFixture(deploy);
@@ -79,18 +76,32 @@ describe("Auction", function () {
         const {Auction, bidder1, bidder2} = await loadFixture(deploy);
         await Auction.connect(bidder1)
           .placeBid({value: 1});
-          
+        // const initialBidderBalance = await ethers.provider.getBalance(bidder1.address);
+ 
         await expect(Auction.connect(bidder2)
           .placeBid({value: 20}));
+        
+        await Auction.waitForDeployment();
           
         expect(await Auction.highestBidder()).to.equal(bidder2);
       });
 
+      it("Terminate Auction", async function () {
+        const {Auction,owner, bidder1, bidder2,NFT} = await loadFixture(deploy);
+        await Auction.connect(bidder1)
+          .placeBid({value: 1});
 
+        await expect(Auction.connect(bidder2)
+          .placeBid({value: 900}));
+        
+        const initialBidderBalance = await ethers.provider.getBalance(bidder2.address);
+        await Auction.connect(owner).finalizeAuction();
+        const finalBidderBalance = await ethers.provider.getBalance(bidder2.address);
+        expect(finalBidderBalance).to.be.lessThan(initialBidderBalance);
+
+      });
 
       
-      
-
 
 
     });

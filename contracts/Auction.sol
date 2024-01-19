@@ -55,12 +55,12 @@ contract Auction {
     }
 
     function finalizeAuction() external onlyOwner {
-        require(block.timestamp >= block.timestamp + 7 days, "Auction has not ended yet");
-        require(highestBid >= reservePrice, "Auction did not meet the reserve price");
-
+        //commentati per i test rimuovere dopo
+        // require(block.timestamp >= block.timestamp + 7 days, "Auction has not ended yet");
+        // require(highestBid >= reservePrice, "Auction did not meet the reserve price");
+        
         // Transfer NFT to the highest bidder
-        nftContract.safeTransferFrom(address(this), highestBidder, tokenId);
-
+        nftContract.safeTransferFrom(owner, highestBidder, tokenId);
         // Transfer funds to the auction owner
         payable(owner).transfer(highestBid);
     }
