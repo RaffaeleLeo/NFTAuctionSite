@@ -5,15 +5,62 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NFT Auction Site</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>Welcome to the NFT Auction Site</h1>
-        </header>
-        <main>
-            <p>Hello World! Explore our collection of unique NFTs.</p>
-        </main>
-    </div>
+    <header>
+        <h1>Welcome to the NFT Auction Site</h1>
+    </header>
+    <main>
+        <p>Browse and bid on exclusive NFT artworks and unique digital assets.</p>
+        <section>
+            <h2>Featured NFTs</h2>
+            <!-- NFT items will be listed here -->
+            <div class="nft-item">
+                <img src="path_to_nft_image" alt="NFT Image">
+                <h3>NFT Title</h3>
+                <p>Description of the NFT.</p>
+                <a href="#">Place a Bid</a>
+            </div>
+            <!-- Repeat for other NFTs -->
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2024 NFT Auction Site. All rights reserved.</p>
+    </footer>
+    <script>
+        window.addEventListener('load', async () => {
+            // Initialize web3
+            if (typeof web3 !== 'undefined') {
+                window.web3 = new Web3(web3.currentProvider);
+            } else {
+                console.log('No web3? You should consider trying MetaMask!');
+                window.web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
+            }
+
+            try {
+                let response = await fetch('../ABI/mint_nft_abi.json');
+                response = response.json();
+            } catch (e) {
+                console.log(e.message);
+            }
+
+            const contractAddress = '0x5fbdb2315678afecb367f032d93f642f64180aa3';
+            contract = new web3.eth.Contract(response, contractAddress)
+            // Start the app
+            startApp();
+        });
+    
+        async function startApp() {
+            const address = "0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199";
+            try {
+                const wei = await window.web3.eth.getBalance(address);
+                const balance = window.web3.utils.fromWei(wei, 'ether');
+                console.log(balance); // Output the balance
+            } catch (err) {
+                console.error(err); // Handle the error
+            }
+        }
+    </script>
 </body>
 </html>
