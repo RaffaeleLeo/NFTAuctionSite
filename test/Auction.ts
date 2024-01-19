@@ -1,5 +1,5 @@
 // test/Auction.test.ts
-import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
+import { loadFixture, time } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
 import { ethers} from "hardhat";
 
@@ -88,16 +88,36 @@ describe("Auction", function () {
 
       it("Terminate Auction", async function () {
         const {Auction,owner, bidder1, bidder2,NFT} = await loadFixture(deploy);
+        const winningBid = 900
         await Auction.connect(bidder1)
           .placeBid({value: 1});
 
         await expect(Auction.connect(bidder2)
-          .placeBid({value: 900}));
-        
-        const initialBidderBalance = await ethers.provider.getBalance(bidder2.address);
+          .placeBid({value: winningBid}));
+
+        // console.log(await time.latest());
+        //aspetta 7 giorni
+        // await time.increase(3600*24*7);
+        // console.log(await time.latest());
+        await Auction.waitForDeployment();
+
+        expect(await ethers.provider.getBalance(Auction)).to.be.equal(winningBid+1);
+
+
+
+        const initialBidderBalance = await ethers.provider.getBalance(bidder2);
+        // const o1 = await ethers.provider.getBalance(owner.address);
+        // const a1 = await ethers.provider.getBalance(Auction);
+        // console.log(a1);
         await Auction.connect(owner).finalizeAuction();
+        // await Auction.waitForDeployment();
+        // const o2 = await ethers.provider.getBalance(owner.address);
+        // const a2 = await ethers.provider.getBalance(Auction);
+        // // console.log(a2);
         const finalBidderBalance = await ethers.provider.getBalance(bidder2.address);
         expect(finalBidderBalance).to.be.lessThan(initialBidderBalance);
+        //New NFT owner = bidder2
+        expect(await NFT.ownerOf(1)).to.be.equal(bidder2);
 
       });
 

@@ -18,6 +18,9 @@ contract Auction {
     address public highestBidder;
     uint256 public highestBid;
 
+    uint256 private start;
+
+
     mapping(address => uint256) public bids;
 
     event BidPlaced(address bidder, uint256 bidAmount);
@@ -37,6 +40,7 @@ contract Auction {
         nftContract = IERC721(_nftContract);
         tokenId = _tokenId;
         reservePrice = _reservePrice;
+        start = block.timestamp;
     }
 
     function placeBid() external payable {
@@ -56,7 +60,7 @@ contract Auction {
 
     function finalizeAuction() external onlyOwner {
         //commentati per i test rimuovere dopo
-        // require(block.timestamp >= block.timestamp + 7 days, "Auction has not ended yet");
+        // require(block.timestamp >= start + 7 days, "Auction has not ended yet");
         // require(highestBid >= reservePrice, "Auction did not meet the reserve price");
         
         // Transfer NFT to the highest bidder
