@@ -22,6 +22,11 @@
                 <p>Description of the NFT.</p>
                 <a href="#">Place a Bid</a>
             </div>
+            <div id="nftDisplay">
+                <img id="nftImage" src="" alt="NFT Image">
+                <h3 id="nftName"></h3>
+                <!-- Add other elements as needed -->
+            </div>
             <!-- Repeat for other NFTs -->
         </section>
     </main>
@@ -29,6 +34,8 @@
         <p>&copy; 2024 NFT Auction Site. All rights reserved.</p>
     </footer>
     <script>
+        let contract;
+
         window.addEventListener('load', async () => {
             // Initialize web3
             if (typeof web3 !== 'undefined') {
@@ -38,18 +45,63 @@
                 window.web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
             }
 
+            let jsonData;
             try {
-                let response = await fetch('../ABI/mint_nft_abi.json');
-                response = response.json();
+                let response = await fetch('{{ url_for("static", filename="ABI/mint_nft_abi.json") }}');
+                jsonData = await response.json(); // Await the JSON parsing
             } catch (e) {
                 console.log(e.message);
+                return; // Exit the function if an error occurs
             }
 
-            const contractAddress = '0x5fbdb2315678afecb367f032d93f642f64180aa3';
-            contract = new web3.eth.Contract(response, contractAddress)
+            const contractAddress = '0x9A676e781A523b5d0C0e43731313A708CB607508';
+            contract = new web3.eth.Contract(jsonData, contractAddress); // Use jsonData here
             // Start the app
-            startApp();
+            mintNFT();
         });
+
+        async function mintNFT() {
+            const accounts = await web3.eth.getAccounts();
+            if (accounts.length === 0) {
+                console.log('No connected accounts');
+                return;
+            }
+
+            const tokenURI = 'https://silver-traditional-marmoset-57.mypinata.cloud/ipfs/QmWNogCchWmFyauGeDHvCTmA6azAvdcED644wTxkAaybxs';
+            contract.methods.mintNFT(accounts[0], tokenURI).send({ from: accounts[0] })
+                .on('receipt', async (receipt) => {
+                    console.log('Minted NFT. Transaction Receipt:', receipt);
+
+                    // Retrieve the current token ID
+                    const currentTokenId = await contract.methods.getCurrentTokenId().call();
+                    displayNFT(currentTokenId);
+                })
+                .on('error', error => {
+                    console.error('Error minting NFT:', error);
+                });
+        }
+
+        async function displayNFT(tokenId) {
+            console.log('hello')
+            console.log(tokenId)
+            const tokenURI = await contract.methods.tokenURI(tokenId).call();
+            const ipfsHash = tokenURI.replace('https://silver-traditional-marmoset-57.mypinata.cloud/ipfs/', '');
+            console.log(ipfsHash)
+            const metadataUrl = `https://silver-traditional-marmoset-57.mypinata.cloud/ipfs/${ipfsHash}`;
+            // const metadataUrl = 'https://silver-traditional-marmoset-57.mypinata.cloud/ipfs/QmWNogCchWmFyauGeDHvCTmA6azAvdcED644wTxkAaybxs'
+
+            const metadataResponse = await fetch(metadataUrl);
+            const metadata = await metadataResponse.json();
+            console.log(metadata.image.replace('ipfs://', ''))
+
+            const imageUrl = `https://silver-traditional-marmoset-57.mypinata.cloud/ipfs/${metadata.image.replace('ipfs://', '')}`;
+            // const imageUrl = 'https://silver-traditional-marmoset-57.mypinata.cloud/ipfs/Qmax9pXv3wTgSi4DsNa2msGuZL6nAuhm4bV1QBcKG47rGM'
+
+            // Now use imageUrl and other metadata to display your NFT
+            document.getElementById('nftImage').src = imageUrl;
+            document.getElementById('nftName').textContent = metadata.name;
+            // ... handle other metadata ...
+        }
     
         async function startApp() {
             const address = "0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199";
