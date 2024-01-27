@@ -12,3 +12,7 @@ npx hardhat node
 npx hardhat run scripts/deploy.ts
 ```
 We need to replace "https://mytokenmetadata.com/nft/1" in the nft minting function with some actual metadata
+
+npx hardhat node
+npx hardhat run scripts/mint-nfts.ts --network localhost
+copy target into contract address into index.html
