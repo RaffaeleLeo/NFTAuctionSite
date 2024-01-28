@@ -14,6 +14,7 @@
     <main>
         <p>Browse and bid on exclusive NFT artworks and unique digital assets.</p>
         <button id='connectWallet' onclick="">Connect Wallet</button>
+        <button id="mintNFTButton">Mint NFT</button>
         <p id="walletAddress"></p>
         <section>
             <h2>Featured NFTs</h2>
@@ -56,21 +57,27 @@
                 return; // Exit the function if an error occurs
             }
 
-            const contractAddress = '0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0';
+            const contractAddress = '0x5FbDB2315678afecb367f032d93F642f64180aa3';
             contract = new web3.eth.Contract(jsonData, contractAddress); // Use jsonData here
             // Start the app
-            mintNFT();
+            // mintNFT();
         });
 
         async function mintNFT() {
-            const accounts = await web3.eth.getAccounts();
-            if (accounts.length === 0) {
-                console.log('No connected accounts');
+            // const accounts = await web3.eth.getAccounts();
+            // if (accounts.length === 0) {
+            //     console.log('No connected accounts');
+            //     return;
+            // }
+
+            // Check if the user's wallet address is set
+            if (!window.userWalletAddress) {
+                console.log('No connected MetaMask account');
                 return;
             }
 
             const tokenURI = 'https://silver-traditional-marmoset-57.mypinata.cloud/ipfs/QmWNogCchWmFyauGeDHvCTmA6azAvdcED644wTxkAaybxs';
-            contract.methods.mintNFT(accounts[0], tokenURI).send({ from: accounts[0] })
+            contract.methods.mintNFT(window.userWalletAddress, tokenURI).send({ from: window.userWalletAddress })
                 .on('receipt', async (receipt) => {
                     console.log('Minted NFT. Transaction Receipt:', receipt);
 
@@ -122,7 +129,7 @@
         const walletAddress = document.getElementById('walletAddress')
         const walletBalance = document.getElementById('walletBalance')
 
-
+        document.getElementById('mintNFTButton').addEventListener('click', mintNFT);
 
         function checkInstalled() {
             if (typeof window.ethereum == 'undefined') {
@@ -168,17 +175,17 @@
 
         async function checkBalance() {
             let balance = await window.ethereum.request({ method: "eth_getBalance",
-            params: [
-            window.userWalletAddress,
-            'latest'
-            ]
-        }).catch((err)=> {
-            console.log(err)
-        })
+                    params: [
+                        window.userWalletAddress,
+                        'latest'
+                        ]
+                    }).catch((err)=> {
+                        console.log(err)
+                })
 
-        console.log(parseFloat((balance) / Math.pow(10,18)))
+            console.log(parseFloat((balance) / Math.pow(10,18)))
 
-        walletBalance.innerText = parseFloat((balance) / Math.pow(10,18))
+            walletBalance.innerText = parseFloat((balance) / Math.pow(10,18))
         }
 
         window.addEventListener('DOMContentLoaded', () => {
