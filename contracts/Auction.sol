@@ -8,33 +8,39 @@ import "hardhat/console.sol";
 
 contract Auction {
 
+    // address of the auction owner
     address public owner;
+    // contract of the NFT of the auction
     IERC721 public nftContract;
-
+    // NFT ID
     uint256 public tokenId;
+    // NFT floor price
     uint256 public reservePrice;
-    
-    // Current state of the auction.
+    // Current state of the auction identified by the address of the highest buyer
     address public highestBidder;
+    // Value of the highest offert
     uint256 public highestBid;
-
+    // starting auction time
     uint256 private start;
-
-
+    // dictionary of the addresses who made an offert
     mapping(address => uint256) public bids;
 
     event BidPlaced(address bidder, uint256 bidAmount);
+
 
     modifier onlyOwner() {
         require(msg.sender == owner, "Not the owner");
         _;
     }
 
+
     modifier onlyNFTOwner() {
         require(nftContract.ownerOf(tokenId) == msg.sender, "Not the NFT owner");
         _;
     }
 
+
+    // constructor of the Auction contract
     constructor(address _nftContract, uint256 _tokenId, uint256 _reservePrice) {
         owner = msg.sender;
         nftContract = IERC721(_nftContract);
@@ -43,25 +49,27 @@ contract Auction {
         start = block.timestamp;
     }
 
+    // function to place a bid
     function placeBid() external payable {
         require(msg.value > highestBid, "Bid amount is not higher than the current highest bid");
         require(msg.sender != highestBidder, "You already have the highest bid");
-
+        // if there is at least one offert
         if (highestBidder != address(0)) {
-            // Refund the previous highest bidder
+            // update the dictionary with losing bidders
             bids[highestBidder] += highestBid;
         }
-
+        // update the highest offert
         highestBidder = msg.sender;
         highestBid = msg.value;
 
         emit BidPlaced(msg.sender, msg.value);
     }
 
+    // function when the auction is over for the winner
     function finalizeAuction() external onlyOwner {
         //commentati per i test rimuovere dopo
-        // require(block.timestamp >= start + 7 days, "Auction has not ended yet");
-        // require(highestBid >= reservePrice, "Auction did not meet the reserve price");
+        require(block.timestamp >= start + 7 days, "Auction has not ended yet");
+        require(highestBid >= reservePrice, "Auction did not meet the reserve price");
         
         // Transfer NFT to the highest bidder
         nftContract.safeTransferFrom(owner, highestBidder, tokenId);
@@ -69,12 +77,11 @@ contract Auction {
         payable(owner).transfer(highestBid);
     }
 
+    // function when the auction is over for the losers
     function withdrawBid() external {
         require(msg.sender != highestBidder, "You cannot withdraw the highest bid");
-
         uint256 bidAmount = bids[msg.sender];
         require(bidAmount > 0, "No bid to withdraw");
-
         bids[msg.sender] = 0;
         payable(msg.sender).transfer(bidAmount);
     }

@@ -1,6 +1,7 @@
 import { ethers } from "hardhat";
 import sqlite3 from 'sqlite3';
 
+/**/ 
 async function main() {
     const [owner] = await ethers.getSigners();
     const NFT = await ethers.getContractFactory("NFT");
