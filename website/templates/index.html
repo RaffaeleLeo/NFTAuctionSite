@@ -15,8 +15,17 @@
         <p>Browse and bid on exclusive NFT artworks and unique digital assets.</p>
         <button id='connectWallet' onclick="">Connect Wallet</button>
         <!-- <button id="mintNFTButton">Mint NFT</button> -->
-        <button id="bidButton">Bid 100wei</button>
+        <button id="bidButton">Bid</button>
+        <button id="updatebidButton">Update Bid</button>
+        <button id="withdrawbidButton">Withdraw Bid</button>
+
+
         <p id="walletAddress"></p>
+        <p>highest bid</p>
+        <p id="highestBid"></p>
+        <p>highest bidder</p>
+        <p id="highestBidder"></p>
+
         <section>
             <h2>Featured NFTs</h2>
             <!-- NFT items will be listed here -->
@@ -27,8 +36,8 @@
                 <a href="#">Place a Bid</a>
             </div>
             <div id="nftDisplay">
-                <img id="nftImage" src="" alt="NFT Image">
                 <h3 id="nftName"></h3>
+                <img id="nftImage" src="" alt="NFT Image">
                 <!-- Add other elements as needed -->
             </div>
             <!-- Repeat for other NFTs -->
@@ -74,58 +83,64 @@
             // Start the app
             // mintNFT();
             displayNFT(1);
+            displayhighestBid();
         });
 
-        async function mintNFT() {
-            // const accounts = await web3.eth.getAccounts();
-            // if (accounts.length === 0) {
-            //     console.log('No connected accounts');
-            //     return;
-            // }
 
-            // Check if the user's wallet address is set
-            if (!window.userWalletAddress) {
-                console.log('No connected MetaMask account');
-                return;
-            }
-
-            const tokenURI = 'https://silver-traditional-marmoset-57.mypinata.cloud/ipfs/QmWNogCchWmFyauGeDHvCTmA6azAvdcED644wTxkAaybxs';
-            contract.methods.mintNFT(window.userWalletAddress, tokenURI).send({ from: window.userWalletAddress })
-                .on('receipt', async (receipt) => {
-                    console.log('Minted NFT. Transaction Receipt:', receipt);
-
-                    // Retrieve the current token ID
-                    const currentTokenId = await contract.methods.getCurrentTokenId().call();
-                    displayNFT(currentTokenId);
-                })
-                .on('error', error => {
-                    console.error('Error minting NFT:', error);
-                });
-        }
-
+        async function displayhighestBid(){
+            highestBid.innerText = await Auctioncontract.methods.highestBid().call();
+            highestBidder.innerText = await Auctioncontract.methods.highestBidder().call();
+            
+        };
+        //bids for the auction
         async function bid(){
-
-            console.log("funzione bid");
-
             // Check if the user's wallet address is set
             if (!window.userWalletAddress) {
                 console.log('No connected MetaMask account');
                 return;
             }
-            // console.log(await Auctioncontract.methods.start().call())
-            Auctioncontract.methods.placeBid().send({from: window.userWalletAddress, value: 100})
+            const bidValue = web3.utils.toWei('2', 'ether');
+            Auctioncontract.methods.placeBid().send({from: window.userWalletAddress, value: bidValue})
                 .on('receipt', async (receipt) => {
                     console.log('Auction Bid. Transaction Receipt:', receipt);
-
-                    // // Retrieve the current token ID
-                    // const currentTokenId = await contract.methods.getCurrentTokenId().call();
-                    // displayNFT(currentTokenId);
+                    displayhighestBid();
                 })
                 .on('error', error => {
                     console.error('Error bidding the auction:', error);
                 });
-
-
+        }
+        //updates previous bid with new eth
+        async function updateBid(){
+            // Check if the user's wallet address is set
+            if (!window.userWalletAddress) {
+                console.log('No connected MetaMask account');
+                return;
+            }
+            const bidValue = web3.utils.toWei('2', 'ether');
+            Auctioncontract.methods.updateBid().send({from: window.userWalletAddress, value: bidValue})
+                .on('receipt', async (receipt) => {
+                    console.log('Auction Bid. Transaction Receipt:', receipt);
+                    displayhighestBid();
+                })
+                .on('error', error => {
+                    console.error('Error bidding the auction:', error);
+                });
+        }
+        //refounds previously bidded eths
+        async function withdrawBid(){
+            // Check if the user's wallet address is set
+            if (!window.userWalletAddress) {
+                console.log('No connected MetaMask account');
+                return;
+            }
+            Auctioncontract.methods.withdrawBid().send({from:window.userWalletAddress})
+                .on('receipt', async (receipt) => {
+                    console.log('Auction Bid. Transaction Receipt:', receipt);
+                    displayhighestBid();
+                })
+                .on('error', error => {
+                    console.error('Error bidding the auction:', error);
+                });
         }
 
         async function displayNFT(tokenId) {
@@ -170,6 +185,10 @@
 
         // document.getElementById('mintNFTButton').addEventListener('click', mintNFT);
         document.getElementById('bidButton').addEventListener('click', bid);
+        document.getElementById('updatebidButton').addEventListener('click', updateBid);
+        document.getElementById('withdrawbidButton').addEventListener('click', withdrawBid);
+
+
 
         function checkInstalled() {
             if (typeof window.ethereum == 'undefined') {
