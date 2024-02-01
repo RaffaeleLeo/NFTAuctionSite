@@ -14,7 +14,8 @@
     <main>
         <p>Browse and bid on exclusive NFT artworks and unique digital assets.</p>
         <button id='connectWallet' onclick="">Connect Wallet</button>
-        <button id="mintNFTButton">Mint NFT</button>
+        <!-- <button id="mintNFTButton">Mint NFT</button> -->
+        <button id="bidButton">Bid 100wei</button>
         <p id="walletAddress"></p>
         <section>
             <h2>Featured NFTs</h2>
@@ -37,7 +38,8 @@
         <p>&copy; 2024 NFT Auction Site. All rights reserved.</p>
     </footer>
     <script>
-        let contract;
+        let NFTcontract;
+        let Auctioncontract;
 
         window.addEventListener('load', async () => {
             // Initialize web3
@@ -48,17 +50,27 @@
                 window.web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
             }
 
-            let jsonData;
+            let NFTjsonData;
             try {
                 let response = await fetch('{{ url_for("static", filename="ABI/mint_nft_abi.json") }}');
-                jsonData = await response.json(); // Await the JSON parsing
+                NFTjsonData = await response.json(); // Await the JSON parsing
             } catch (e) {
                 console.log(e.message);
                 return; // Exit the function if an error occurs
             }
+            let AuctionjsonData;
+            try {
+                let response = await fetch('{{ url_for("static", filename="ABI/auction_abi.json") }}');
+                AuctionjsonData = await response.json(); // Await the JSON parsing
+            } catch (e) {
+                console.log(e.message);
+                return; // Exit the function if an error occurs
+            }
+            const NFTcontractAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+            const AuctioncontractAddress = '0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0';
+            NFTcontract = new web3.eth.Contract(NFTjsonData, NFTcontractAddress); // Use jsonData here
+            Auctioncontract = new web3.eth.Contract(AuctionjsonData, AuctioncontractAddress); // Use jsonData here
 
-            const contractAddress = '0x5FbDB2315678afecb367f032d93F642f64180aa3';
-            contract = new web3.eth.Contract(jsonData, contractAddress); // Use jsonData here
             // Start the app
             // mintNFT();
             displayNFT(1);
@@ -91,10 +103,36 @@
                 });
         }
 
+        async function bid(){
+
+            console.log("funzione bid");
+
+            // Check if the user's wallet address is set
+            if (!window.userWalletAddress) {
+                console.log('No connected MetaMask account');
+                return;
+            }
+            // console.log(await Auctioncontract.methods.start().call())
+            Auctioncontract.methods.placeBid().send({from: window.userWalletAddress, value: 100})
+                .on('receipt', async (receipt) => {
+                    console.log('Auction Bid. Transaction Receipt:', receipt);
+
+                    // // Retrieve the current token ID
+                    // const currentTokenId = await contract.methods.getCurrentTokenId().call();
+                    // displayNFT(currentTokenId);
+                })
+                .on('error', error => {
+                    console.error('Error bidding the auction:', error);
+                });
+
+
+        }
+
         async function displayNFT(tokenId) {
             console.log('hello')
             console.log(tokenId)
-            const tokenURI = await contract.methods.tokenURI(tokenId).call();
+            const tokenURI = await NFTcontract.methods.tokenURI(tokenId).call();
+            console.log("il token uri è",tokenURI);
             const ipfsHash = tokenURI.replace('https://silver-traditional-marmoset-57.mypinata.cloud/ipfs/', '');
             console.log(ipfsHash)
             const metadataUrl = `https://silver-traditional-marmoset-57.mypinata.cloud/ipfs/${ipfsHash}`;
@@ -130,7 +168,8 @@
         const walletAddress = document.getElementById('walletAddress')
         const walletBalance = document.getElementById('walletBalance')
 
-        document.getElementById('mintNFTButton').addEventListener('click', mintNFT);
+        // document.getElementById('mintNFTButton').addEventListener('click', mintNFT);
+        document.getElementById('bidButton').addEventListener('click', bid);
 
         function checkInstalled() {
             if (typeof window.ethereum == 'undefined') {

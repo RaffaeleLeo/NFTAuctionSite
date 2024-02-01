@@ -4,22 +4,26 @@ import { ethers } from "hardhat";
  * function that mint the NFT and start the auction
  */
 async function main() {
-    //get owner address of the auction creator  
-    const [owner] = await ethers.getSigners();
+    //use the owner address instead  
+    // const [owner] = await ethers.getSigners();
+    //
+    const owner = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
     //NFT contract creation
     const NFT = await ethers.getContractFactory("NFT");
     //NFT contract deployment
     const nft = await NFT.deploy();
     //vuoto??
-    console.log("NFT Contract deployed to:", nft.tokenURI);
+    // console.log("NFT Contract deployed to:", nft.tokenURI);
+    console.log("NFT Contract deployed to:",await nft.getAddress());
+
     //NFT data
     const tokenURI = 'https://silver-traditional-marmoset-57.mypinata.cloud/ipfs/QmWNogCchWmFyauGeDHvCTmA6azAvdcED644wTxkAaybxs';
     //NFT creation
-    const txn = await nft.mintNFT(owner.address, tokenURI);
+    const txn = await nft.mintNFT(owner, tokenURI);
     await txn.wait();
 
-    console.log("chainId: ", txn.blockNumber);
-    console.log("NFT minted:", txn.hash);
+    // console.log("chainId: ", txn.blockNumber);
+    // console.log("NFT minted:", txn.hash);
 
     // Auction based on the first image of the NFT
     const tokenId = 1;
@@ -33,6 +37,10 @@ async function main() {
 
     // lets the auction sell the owner's token
     await nft.approve(Auction,tokenId);
+
+    // console.log("Auction Contract",Auction);
+    console.log("Auction Contract deployed to:",await Auction.getAddress());
+
 }
 
 main().catch((error) => {

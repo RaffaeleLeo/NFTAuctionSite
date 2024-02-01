@@ -21,7 +21,7 @@ contract Auction {
     // Value of the highest offert
     uint256 public highestBid;
     // starting auction time
-    uint256 private start;
+    uint256 public start;
     // dictionary of the addresses who made an offert
     mapping(address => uint256) public bids;
 
