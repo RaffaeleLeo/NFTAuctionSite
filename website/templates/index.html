@@ -195,7 +195,11 @@
             popup.style.color = 'white';
             popup.style.padding = '10px';
             popup.style.textAlign = 'center';
-            popup.textContent = 'MetaMask isn\'t installed, please install it';
+            if (typeof window.ethereum == 'undefined') {
+                popup.textContent = 'MetaMask isn\'t installed, please install it';
+            }else{
+                popup.textContent = 'Connect MetaMask Wallet';
+            }
 
             // Aggiunta del popup al documento
             document.body.appendChild(popup);
