@@ -29,12 +29,12 @@
         <section>
             <h2>Featured NFTs</h2>
             <!-- NFT items will be listed here -->
-            <div class="nft-item">
+            <!-- <div class="nft-item">
                 <img src="path_to_nft_image" alt="NFT Image">
                 <h3>NFT Title</h3>
                 <p>Description of the NFT.</p>
                 <a href="#">Place a Bid</a>
-            </div>
+            </div> -->
             <div id="nftDisplay">
                 <h3 id="nftName"></h3>
                 <img id="nftImage" src="" alt="NFT Image">
@@ -53,7 +53,7 @@
         window.addEventListener('load', async () => {
             // Initialize web3
             if (typeof web3 !== 'undefined') {
-                window.web3 = new Web3(web3.currentProvider);
+                window.web3 = new Web3(window.ethereum);
             } else {
                 console.log('No web3? You should consider trying MetaMask!');
                 window.web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
@@ -96,8 +96,7 @@
         async function bid(){
             // Check if the user's wallet address is set
             if (!window.userWalletAddress) {
-                console.log('No connected MetaMask account');
-                return;
+                return errorMetamask();
             }
             const bidValue = web3.utils.toWei('2', 'ether');
             Auctioncontract.methods.placeBid().send({from: window.userWalletAddress, value: bidValue})
@@ -105,16 +104,17 @@
                     console.log('Auction Bid. Transaction Receipt:', receipt);
                     displayhighestBid();
                 })
-                .on('error', error => {
+                .on('error', async(error) => {
+                    console.log("errore");
                     console.error('Error bidding the auction:', error);
-                });
+                })
         }
         //updates previous bid with new eth
         async function updateBid(){
             // Check if the user's wallet address is set
             if (!window.userWalletAddress) {
-                console.log('No connected MetaMask account');
-                return;
+                return errorMetamask();
+
             }
             const bidValue = web3.utils.toWei('2', 'ether');
             Auctioncontract.methods.updateBid().send({from: window.userWalletAddress, value: bidValue})
@@ -130,8 +130,7 @@
         async function withdrawBid(){
             // Check if the user's wallet address is set
             if (!window.userWalletAddress) {
-                console.log('No connected MetaMask account');
-                return;
+                return errorMetamask();
             }
             Auctioncontract.methods.withdrawBid().send({from:window.userWalletAddress})
                 .on('receipt', async (receipt) => {
@@ -144,21 +143,18 @@
         }
 
         async function displayNFT(tokenId) {
-            console.log('hello')
-            console.log(tokenId)
+            console.log("Token ID:",tokenId)
             const tokenURI = await NFTcontract.methods.tokenURI(tokenId).call();
-            console.log("il token uri è",tokenURI);
+            console.log("Token URI:",tokenURI);
             const ipfsHash = tokenURI.replace('https://silver-traditional-marmoset-57.mypinata.cloud/ipfs/', '');
-            console.log(ipfsHash)
+            // console.log(ipfsHash)
             const metadataUrl = `https://silver-traditional-marmoset-57.mypinata.cloud/ipfs/${ipfsHash}`;
-            // const metadataUrl = 'https://silver-traditional-marmoset-57.mypinata.cloud/ipfs/QmWNogCchWmFyauGeDHvCTmA6azAvdcED644wTxkAaybxs'
 
             const metadataResponse = await fetch(metadataUrl);
             const metadata = await metadataResponse.json();
-            console.log(metadata.image.replace('ipfs://', ''))
+            // console.log(metadata.image.replace('ipfs://', ''))
 
             const imageUrl = `https://silver-traditional-marmoset-57.mypinata.cloud/ipfs/${metadata.image.replace('ipfs://', '')}`;
-            // const imageUrl = 'https://silver-traditional-marmoset-57.mypinata.cloud/ipfs/Qmax9pXv3wTgSi4DsNa2msGuZL6nAuhm4bV1QBcKG47rGM'
 
             // Now use imageUrl and other metadata to display your NFT
             document.getElementById('nftImage').src = imageUrl;
@@ -188,13 +184,33 @@
         document.getElementById('updatebidButton').addEventListener('click', updateBid);
         document.getElementById('withdrawbidButton').addEventListener('click', withdrawBid);
 
+        function errorMetamask(){
+            console.log('No connected MetaMask account');
+            const popup = document.createElement('div');
+            popup.style.position = 'fixed';
+            popup.style.bottom = '0';
+            popup.style.left = '0';
+            popup.style.width = '100%';
+            popup.style.backgroundColor = 'red';
+            popup.style.color = 'white';
+            popup.style.padding = '10px';
+            popup.style.textAlign = 'center';
+            popup.textContent = 'MetaMask isn\'t installed, please install it';
 
+            // Aggiunta del popup al documento
+            document.body.appendChild(popup);
+            setTimeout(function() {
+                popup.remove();
+            }, 2000);
+            return;
+        }
 
         function checkInstalled() {
             if (typeof window.ethereum == 'undefined') {
-            connectWallet.innerText = 'MetaMask isnt installed, please install it'
+            // connectWallet.innerText = 'MetaMask isnt installed, please install it'
             connectWallet.classList.remove()
             connectWallet.classList.add()
+            connectWallet.addEventListener('click', errorMetamask)
             return false
             }
             connectWallet.addEventListener('click', connectWalletwithMetaMask)

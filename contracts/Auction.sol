@@ -112,4 +112,9 @@ contract Auction {
         bids[msg.sender] = 0;
         payable(msg.sender).transfer(bidAmount);
     }
+    // * receive function
+    receive() external payable {}
+
+    // * fallback function
+    fallback() external payable {}
 }

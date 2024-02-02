@@ -7,7 +7,10 @@ const config: HardhatUserConfig = {
   defaultNetwork:"hardhat",
   networks:{
     hardhat:{
-      chainId:1137
+      chainId:1137,
+      // gas:"auto",
+      // gasPrice:"auto"
+      // initialBaseFeePerGas: 0
     }
   }
 };
