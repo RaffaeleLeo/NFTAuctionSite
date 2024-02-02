@@ -24,31 +24,6 @@
     "type": "event"
   },
   {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "bidder",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "bidAmount",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "totalAmount",
-        "type": "uint256"
-      }
-    ],
-    "name": "BidUpdated",
-    "type": "event"
-  },
-  {
     "stateMutability": "payable",
     "type": "fallback"
   },
@@ -197,13 +172,6 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "updateBid",
-    "outputs": [],
-    "stateMutability": "payable",
     "type": "function"
   },
   {

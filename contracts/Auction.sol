@@ -26,9 +26,6 @@ contract Auction {
     mapping(address => uint256) public bids;
 
     event BidPlaced(address bidder, uint256 bidAmount);
-    event BidUpdated(address bidder, uint256 bidAmount,uint256 totalAmount);
-
-
 
     modifier onlyOwner() {
         require(msg.sender == owner, "Not the owner");
@@ -57,25 +54,11 @@ contract Auction {
     // function to place a bid
     function placeBid() external payable {
         require(msg.sender != highestBidder, "You already have the highest bid");
-        require(msg.value > highestBid, "Bid amount is not higher than the current highest bid");
-        // if there is at least one offert
-        if (highestBidder != address(0)) {
-            // update the dictionary with losing bidders
-            bids[highestBidder] += highestBid;
-        }
-        // update the highest offert
-        highestBidder = msg.sender;
-        highestBid = msg.value;
-
-        emit BidPlaced(msg.sender, msg.value);
-    }
-
-    function updateBid() external payable{
-        require(msg.sender != highestBidder, "You already have the highest bid");
 
         uint256 prevbidAmount = bids[msg.sender];
         uint256 bidAmount = msg.value;
 
+        //there is a previous bid
         if(prevbidAmount>0){
             bidAmount +=prevbidAmount;
         }
@@ -90,8 +73,7 @@ contract Auction {
         highestBidder = msg.sender;
         highestBid = bidAmount;
 
-        emit BidUpdated(msg.sender, msg.value, bidAmount);
-
+        emit BidPlaced(msg.sender, highestBid);
     }
 
 
