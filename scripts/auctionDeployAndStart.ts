@@ -19,8 +19,8 @@ async function main() {
     //NFT data
     const tokenURI = 'https://silver-traditional-marmoset-57.mypinata.cloud/ipfs/QmWNogCchWmFyauGeDHvCTmA6azAvdcED644wTxkAaybxs';
     //NFT creation
-    // const txn = await nft.mintNFT(owner, tokenURI);
-    // await txn.wait();
+    const txn = await nft.mintNFT(owner, tokenURI);
+    await txn.wait();
 
     // console.log("chainId: ", txn.blockNumber);
     // console.log("NFT minted:", txn.hash);
@@ -34,7 +34,7 @@ async function main() {
     // auction contract deployment
     // const Auction = await AuctionFactory.deploy(nft,tokenId,reservePrice);
     const Auction = await AuctionFactory.deploy();
-    // Auction.begin(nft,tokenId,reservePrice);
+    Auction.begin(nft,tokenId,reservePrice);
 
     await Auction.waitForDeployment();
 
