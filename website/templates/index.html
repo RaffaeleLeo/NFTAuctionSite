@@ -16,7 +16,6 @@
         <!-- <button id="mintNFTButton">Mint NFT</button> -->
         <button id="bidButton">Bid</button>
         <input type="number" id="offerValue" placeholder="Insert an offer">
-        <button id="updatebidButton">Update Bid</button>
         <button id="withdrawbidButton">Withdraw Bid</button>
         <button id="endauction">End Auction</button>
 
@@ -50,6 +49,9 @@
     <script>
         let NFTcontract;
         let Auctioncontract;
+
+        // Define the auction owner's address for comparison
+        const auctionOwnerAddress = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266".toLowerCase();
 
         window.addEventListener('load', async () => {
             // Initialize web3
@@ -131,23 +133,6 @@
                     console.error('Error bidding the auction:', error);
                 })
         }
-        //updates previous bid with new eth
-        async function updateBid(){
-            // Check if the user's wallet address is set
-            if (!window.userWalletAddress) {
-                return errorMetamask();
-
-            }
-            const bidValue = web3.utils.toWei('2', 'ether');
-            Auctioncontract.methods.updateBid().send({from: window.userWalletAddress, value: bidValue})
-                .on('receipt', async (receipt) => {
-                    console.log('Auction Bid. Transaction Receipt:', receipt);
-                    displayhighestBid();
-                })
-                .on('error', error => {
-                    console.error('Error bidding the auction:', error);
-                });
-        }
         //refounds previously bidded eths
         async function withdrawBid(){
             // Check if the user's wallet address is set
@@ -204,7 +189,6 @@
 
         // document.getElementById('mintNFTButton').addEventListener('click', mintNFT);
         document.getElementById('bidButton').addEventListener('click', bid);
-        document.getElementById('updatebidButton').addEventListener('click', updateBid);
         document.getElementById('withdrawbidButton').addEventListener('click', withdrawBid);
         document.getElementById('endauction').addEventListener('click', endAuction);
 
@@ -245,6 +229,16 @@
             connectWallet.addEventListener('click', connectWalletwithMetaMask)
         }
 
+        async function adjustUIForUserRole() {
+            const isOwner = window.userWalletAddress === auctionOwnerAddress;
+            // Adjust UI elements based on the user role
+            document.getElementById('endauction').style.display = isOwner ? 'block' : 'none';
+            document.getElementById('withdrawbidButton').style.display = isOwner ? 'none' : 'block';
+
+            // Add or modify other elements as needed for owner
+            // For participants, you can either hide or show elements, or modify text/content
+        }
+
         async function connectWalletwithMetaMask() {
             const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' })
             .catch((e) => {
@@ -263,6 +257,7 @@
             connectWallet.addEventListener('click', signOutOfMetaMask)
             }, 200)
 
+            adjustUIForUserRole();
         }
 
 
@@ -270,6 +265,8 @@
             window.userwalletAddress = null
             walletAddress.innerText = ''
             connectWallet.innerText = 'Connect Wallet'
+
+            document.getElementById('endauction').style.display = 'none'; // Hide auction end button by default
 
             connectWallet.removeEventListener('click', signOutOfMetaMask)
             setTimeout(() => {
@@ -294,6 +291,8 @@
 
         window.addEventListener('DOMContentLoaded', () => {
             checkInstalled()
+
+            document.getElementById('endauction').style.display = 'none'; // Hide end auction button by default
         })
         //END METAMASK
     </script>
