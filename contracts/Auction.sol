@@ -42,9 +42,12 @@ contract Auction {
     }
 
 
-    // constructor of the Auction contract
-    constructor(address _nftContract, uint256 _tokenId, uint256 _reservePrice) {
+    //constructor of the auction
+    constructor(){
         owner = msg.sender;
+    }
+    //begins an auction
+    function begin(address _nftContract, uint256 _tokenId, uint256 _reservePrice) external onlyOwner {
         nftContract = IERC721(_nftContract);
         tokenId = _tokenId;
         reservePrice = _reservePrice;

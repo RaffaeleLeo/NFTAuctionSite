@@ -18,7 +18,10 @@ describe("Auction", function () {
     const reservePrice = 100
 
     const AuctionFactory = await ethers.getContractFactory("Auction");
-    const Auction = await AuctionFactory.deploy(NFT,tokenId,reservePrice);
+    // const Auction = await AuctionFactory.deploy(NFT,tokenId,reservePrice);
+    const Auction = await AuctionFactory.deploy();
+    Auction.begin(NFT,tokenId,reservePrice);
+
 
     //lets the auction sell the owner's token
     await NFT.approve(Auction,tokenId);
