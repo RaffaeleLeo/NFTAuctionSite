@@ -117,7 +117,10 @@
             if (!window.userWalletAddress) {
                 return errorMetamask();
             }
-            const bidValue = web3.utils.toWei('2', 'ether');
+            var offert = document.getElementById("offerValue").value;
+
+            console.log(offert)
+            const bidValue = web3.utils.toWei(offert.toString(), 'ether');
             Auctioncontract.methods.placeBid().send({from: window.userWalletAddress, value: bidValue})
                 .on('receipt', async (receipt) => {
                     console.log('Auction Bid. Transaction Receipt:', receipt);
