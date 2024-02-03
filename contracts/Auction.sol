@@ -80,7 +80,7 @@ contract Auction {
     // function when the auction is over for the winner
     function finalizeAuction() external onlyOwner {
         //commentati per i test rimuovere dopo
-        require(block.timestamp >= start + 7 days, "Auction has not ended yet");
+        //require(block.timestamp >= start + 7 days, "Auction has not ended yet");
         require(highestBid >= reservePrice, "Auction did not meet the reserve price");
         
         // Transfer NFT to the highest bidder

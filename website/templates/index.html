@@ -19,13 +19,17 @@
         <button id="withdrawbidButton">Withdraw Bid</button>
         <button id="endauction">End Auction</button>
 
-
         <p id="walletAddress"></p>
+
+        
         <p>highest bid</p>
-        <p id="highestBid"></p>
+        <!-- 
         <p>highest bidder</p>
         <p id="highestBidder"></p>
-
+        -->
+        <p id="highestBid"></p>
+        <p id="highestBidder"></p>
+       
         <section>
             <h2>Featured NFTs</h2>
             <!-- NFT items will be listed here -->
@@ -43,9 +47,6 @@
             <!-- Repeat for other NFTs -->
         </section>
     </main>
-    <footer>
-        <p>&copy; 2024 NFT Auction Site. All rights reserved.</p>
-    </footer>
     <script>
         let NFTcontract;
         let Auctioncontract;
@@ -86,7 +87,7 @@
             // Start the app
             // mintNFT();
             displayNFT(1);
-            displayhighestBid();
+            //displayhighestBid();
         });
 
         async function endAuction(){
@@ -109,8 +110,16 @@
             };
         }
         async function displayhighestBid(){
-            highestBid.innerText = await Auctioncontract.methods.highestBid().call();
-            highestBidder.innerText = await Auctioncontract.methods.highestBidder().call();
+            
+            var hbid = await Auctioncontract.methods.highestBid().call();
+            highestBid.innerText = await web3.utils.fromWei(hbid, "ether");
+            var hbidder = await Auctioncontract.methods.highestBidder().call();
+            console.log(hbidder);
+            console.log(window.userWalletAddress);
+            if (hbidder.toLowerCase() == window.userWalletAddress.toLowerCase()){
+                highestBidder.innerText = "you are winning the auction";
+
+            }
             
         };
         //bids for the auction
@@ -221,10 +230,10 @@
         function checkInstalled() {
             if (typeof window.ethereum == 'undefined') {
             // connectWallet.innerText = 'MetaMask isnt installed, please install it'
-            connectWallet.classList.remove()
-            connectWallet.classList.add()
-            connectWallet.addEventListener('click', errorMetamask)
-            return false
+                connectWallet.classList.remove()
+                connectWallet.classList.add()
+                connectWallet.addEventListener('click', errorMetamask)
+                return false
             }
             connectWallet.addEventListener('click', connectWalletwithMetaMask)
         }
@@ -249,7 +258,7 @@
             if (!accounts) { return }
 
             window.userWalletAddress = accounts[0]
-            walletAddress.innerText = window.userWalletAddress
+            //walletAddress.innerText = window.userWalletAddress
 
             connectWallet.innerText = 'Sign Out'
             connectWallet.removeEventListener('click', connectWalletwithMetaMask)
@@ -258,6 +267,8 @@
             }, 200)
 
             adjustUIForUserRole();
+            displayhighestBid();
+
         }
 
 
