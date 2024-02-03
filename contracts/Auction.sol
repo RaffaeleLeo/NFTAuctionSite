@@ -27,6 +27,7 @@ contract Auction {
 
     event BidPlaced(address bidder, uint256 bidAmount);
     event AuctionTerminated(address winner,IERC721 nftContract, uint256 tokenId);
+    event AuctionStarted(IERC721 nftContract);
 
     modifier onlyOwner() {
         require(msg.sender == owner, "Not the owner");
@@ -50,6 +51,7 @@ contract Auction {
         tokenId = _tokenId;
         reservePrice = _reservePrice;
         start = block.timestamp;
+        emit AuctionStarted(nftContract);
     }
 
     // function to place a bid

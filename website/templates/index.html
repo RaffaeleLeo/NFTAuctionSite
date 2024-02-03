@@ -12,17 +12,19 @@
         <h1>Welcome to the NFT Auction Site</h1>
     </header>
     <main>
+        <button id="startAuctionButton" style="display: none;">Start Auction</button>
+
         <button id='connectWallet' onclick="">Connect Wallet</button>
         <!-- <button id="mintNFTButton">Mint NFT</button> -->
-        <button id="bidButton">Bid</button>
-        <input type="number" id="offerValue" placeholder="Insert an offer">
-        <button id="withdrawbidButton">Withdraw Bid</button>
-        <button id="endauction">End Auction</button>
+        <button id="bidButton" style="display: none;">Bid</button>
+        <input type="number" id="offerValue" placeholder="Insert an offer" style="display: none;">
+        <button id="withdrawbidButton" style="display: none;">Withdraw Bid</button>
+        <button id="endauction" style="display: none;">End Auction</button>
 
         <p id="walletAddress"></p>
 
         
-        <p id = "highestBidTitle">highest bid</p>
+        <p id = "highestBidTitle" style="display: none;">highest bid</p>
         <!-- 
         <p>highest bidder</p>
         <p id="highestBidder"></p>
@@ -53,8 +55,9 @@
     </main>
     <script>
         let NFTcontract;
+        let NFTcontractAddress;
         let Auctioncontract;
-
+        let auctionStarted = false;
         // Define the auction owner's address for comparison
         const auctionOwnerAddress = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266".toLowerCase();
 
@@ -83,13 +86,14 @@
                 console.log(e.message);
                 return; // Exit the function if an error occurs
             }
-            const NFTcontractAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+            NFTcontractAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
             const AuctioncontractAddress = '0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0';
             NFTcontract = new web3.eth.Contract(NFTjsonData, NFTcontractAddress); // Use jsonData here
             Auctioncontract = new web3.eth.Contract(AuctionjsonData, AuctioncontractAddress); // Use jsonData here
 
             // Start the app
             // mintNFT();
+            adjustUIForUserRole();
             if(!await endedAuction()){
                 displayNFT(1);
             }
@@ -151,6 +155,24 @@
                 highestBidder.innerText = "you are winning the auction";
 
             }
+            //read aucitonstarted event
+            Auctioncontract.getPastEvents("AuctionStarted",{
+                fromBlock:"earliest",
+                toBlock:"latest"
+            }, function(error, events){ console.log("errore"); })
+            .then(function(events){
+                console.log(events);
+                console.log("hello people in teh event")
+                if(events.length !=0){
+                    latestBid.innerText= "you can now place your bid";
+                    auctionStarted = true;
+                    adjustUIForUserRole();
+                }else{
+                    latestBid.innerText = "the auction has not started yet"
+                }
+                // console.log(mylatestbid) // same results as the optional callback above
+                // console.log(web3.utils.fromWei(mylatestbid,"ether"))
+            });
             //read bidPlaced event
             Auctioncontract.getPastEvents("BidPlaced",{
                 filter: {bidder : window.userWalletAddress},
@@ -271,6 +293,7 @@
         document.getElementById('bidButton').addEventListener('click', bid);
         document.getElementById('withdrawbidButton').addEventListener('click', withdrawBid);
         document.getElementById('endauction').addEventListener('click', endAuction);
+        document.getElementById('startAuctionButton').addEventListener('click', startAuction);
 
 
         function errorMetamask(){
@@ -298,6 +321,14 @@
             return;
         }
 
+        // async function startAuction(){
+        //     document.getElementById('nftDisplay').style.display= 'block';
+        //     document.getElementById('bidButton').style.display= 'block';
+        //     document.getElementById('withdrawbidButton').style.display= 'block';
+        //     document.getElementById('offerValue').style.display= 'block';
+        //     document.getElementById('highestBidTitle').style.display= 'block';
+        // }
+
         function checkInstalled() {
             if (typeof window.ethereum == 'undefined') {
             // connectWallet.innerText = 'MetaMask isnt installed, please install it'
@@ -310,15 +341,22 @@
         }
 
         async function adjustUIForUserRole() {
-            const isOwner = window.userWalletAddress === auctionOwnerAddress;
+            console.log("adjusting screen")
+            const isOwner = window.userWalletAddress === auctionOwnerAddress.toLowerCase();
             const hbidder = await Auctioncontract.methods.highestBidder().call();
             const isHigestBidder = window.userWalletAddress === hbidder.toLowerCase();
             // Adjust UI elements based on the user role
-            document.getElementById('endauction').style.display = isOwner ? 'block' : 'none';
-            document.getElementById('withdrawbidButton').style.display = isOwner|isHigestBidder ? 'none' : 'block';
-            document.getElementById('highestBidTitle').style.display= 'block';
+            document.getElementById('bidButton').style.display= auctionStarted && !isOwner ? 'block': 'none';
+            document.getElementById('withdrawbidButton').style.display= auctionStarted && !isOwner && !isHigestBidder ? 'block': 'none';
+            document.getElementById('offerValue').style.display= auctionStarted && !isOwner ? 'block': 'none';
+            document.getElementById('highestBidTitle').style.display= auctionStarted ? 'block': 'none';
 
+            document.getElementById('highestBid').style.display = auctionStarted ? 'block' : 'none';
+            document.getElementById('latestBid').style.display = auctionStarted && !isOwner ? 'block' : 'none';
 
+            document.getElementById('endauction').style.display = auctionStarted && isOwner ? 'block' : 'none';
+            document.getElementById('nftDisplay').style.display= auctionStarted? 'block': 'none';
+            document.getElementById('startAuctionButton').style.display = isOwner ? 'block' : 'none';
             // Add or modify other elements as needed for owner
             // For participants, you can either hide or show elements, or modify text/content
         }
@@ -344,6 +382,26 @@
             adjustUIForUserRole();
             displayhighestBid();
 
+        }
+
+        async function startAuction() {
+            if (!window.userWalletAddress) {
+                console.log('Wallet not connected');
+                return;
+            }
+            console.log("hello")
+            // This assumes you have a function in your Auction contract to start the auction, adjust as necessary
+            // Example: AuctionContract.methods.startAuction(parameters...).send({from: window.userWalletAddress})
+            const tokenId = 1; // The ID of the NFT to be auctioned, adjust as necessary
+            const reservePrice = web3.utils.toWei('0.1', 'ether'); // Example reserve price, adjust as necessary
+            
+            try {
+                console.log(NFTcontractAddress)
+                const transactionReceipt = await Auctioncontract.methods.begin(NFTcontractAddress, tokenId, reservePrice).send({from: window.userWalletAddress});
+                console.log('Auction started successfully:', transactionReceipt);
+            } catch (error) {
+                console.error('Error starting the auction:', error);
+            }
         }
 
 

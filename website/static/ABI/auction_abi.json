@@ -9,6 +9,19 @@
     "inputs": [
       {
         "indexed": false,
+        "internalType": "contract IERC721",
+        "name": "nftContract",
+        "type": "address"
+      }
+    ],
+    "name": "AuctionStarted",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
         "internalType": "address",
         "name": "winner",
         "type": "address"

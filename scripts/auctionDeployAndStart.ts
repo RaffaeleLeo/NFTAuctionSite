@@ -34,7 +34,7 @@ async function main() {
     // auction contract deployment
     // const Auction = await AuctionFactory.deploy(nft,tokenId,reservePrice);
     const Auction = await AuctionFactory.deploy();
-    Auction.begin(nft,tokenId,reservePrice);
+    // Auction.begin(nft,tokenId,reservePrice);
 
     await Auction.waitForDeployment();
 
