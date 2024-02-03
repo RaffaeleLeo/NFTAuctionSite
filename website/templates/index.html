@@ -90,8 +90,7 @@
 
             // Start the app
             // mintNFT();
-            console.log(await endedAuction());
-            if(! await endedAuction()){
+            if(!await endedAuction()){
                 displayNFT(1);
             }
             //auction ended
@@ -109,17 +108,17 @@
         });
 
         async function endedAuction(){
+            var result = false;
             await Auctioncontract.getPastEvents("AuctionTerminated",{
                 fromBlock:"earliest",
                 toBlock:"latest"
             }, function(error, events){ console.log("errore"); })
             .then(function(events){
                 if(events.length !=0){
-                    print("fine");
-                    return true;
+                    result=true;
                 }
             });
-            return false;
+            return result;
         }
 
         async function endAuction(){
