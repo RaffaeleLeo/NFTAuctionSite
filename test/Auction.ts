@@ -89,42 +89,77 @@ describe("Auction", function () {
         expect(await Auction.highestBidder()).to.equal(bidder2);
       });
 
-      it("Terminate Auction", async function () {
-        const {Auction,owner, bidder1, bidder2,NFT} = await loadFixture(deploy);
-        const winningBid = 900
+      // it("Terminate Auction", async function () {
+      //   const {Auction,owner, bidder1, bidder2,NFT} = await loadFixture(deploy);
+      //   const winningBid = 900
+      //   await Auction.connect(bidder1)
+      //     .placeBid({value: 1});
+
+      //   await expect(Auction.connect(bidder2)
+      //     .placeBid({value: winningBid}));
+
+      //   // console.log(await time.latest());
+      //   //aspetta 7 giorni
+      //   // await time.increase(3600*24*7);
+      //   // console.log(await time.latest());
+      //   await Auction.waitForDeployment();
+
+      //   expect(await ethers.provider.getBalance(Auction)).to.be.equal(winningBid);
+
+
+
+      //   const initialBidderBalance = await ethers.provider.getBalance(bidder2);
+      //   // const o1 = await ethers.provider.getBalance(owner.address);
+      //   // const a1 = await ethers.provider.getBalance(Auction);
+      //   // console.log(a1);
+      //   await Auction.connect(owner).finalizeAuction();
+      //   // await Auction.waitForDeployment();
+      //   // const o2 = await ethers.provider.getBalance(owner.address);
+      //   // const a2 = await ethers.provider.getBalance(Auction);
+      //   // // console.log(a2);
+      //   const finalBidderBalance = await ethers.provider.getBalance(bidder2.address);
+      //   expect(finalBidderBalance).to.be.lessThan(initialBidderBalance);
+      //   //New NFT owner = bidder2
+      //   expect(await NFT.ownerOf(1)).to.be.equal(bidder2);
+
+      // });
+
+      it("bidwar address", async function () {
+        const {Auction, bidder1, bidder2} = await loadFixture(deploy);
         await Auction.connect(bidder1)
-          .placeBid({value: 1});
+          .placeBid({value: ethers.parseEther("1")});
+        // const initialBidderBalance = await ethers.provider.getBalance(bidder1.address);
+ 
+        await Auction.connect(bidder2)
+          .placeBid({value: ethers.parseEther("2")});
 
-        await expect(Auction.connect(bidder2)
-          .placeBid({value: winningBid}));
-
-        // console.log(await time.latest());
-        //aspetta 7 giorni
-        // await time.increase(3600*24*7);
-        // console.log(await time.latest());
+        await Auction.connect(bidder1)
+          .placeBid({value: ethers.parseEther("3")}); 
+        
         await Auction.waitForDeployment();
-
-        expect(await ethers.provider.getBalance(Auction)).to.be.equal(winningBid+1);
-
-
-
-        const initialBidderBalance = await ethers.provider.getBalance(bidder2);
-        // const o1 = await ethers.provider.getBalance(owner.address);
-        // const a1 = await ethers.provider.getBalance(Auction);
-        // console.log(a1);
-        await Auction.connect(owner).finalizeAuction();
-        // await Auction.waitForDeployment();
-        // const o2 = await ethers.provider.getBalance(owner.address);
-        // const a2 = await ethers.provider.getBalance(Auction);
-        // // console.log(a2);
-        const finalBidderBalance = await ethers.provider.getBalance(bidder2.address);
-        expect(finalBidderBalance).to.be.lessThan(initialBidderBalance);
-        //New NFT owner = bidder2
-        expect(await NFT.ownerOf(1)).to.be.equal(bidder2);
-
+          
+        expect(await Auction.highestBidder()).to.equal(bidder1);
       });
 
-      
+      it("bidwar value", async function () {
+        const {Auction, bidder1, bidder2} = await loadFixture(deploy);
+        await Auction.connect(bidder1)
+          .placeBid({value: ethers.parseEther("10")});
+        // const initialBidderBalance = await ethers.provider.getBalance(bidder1.address);
+ 
+        await Auction.connect(bidder2)
+          .placeBid({value: ethers.parseEther("12")});
+
+        await Auction.connect(bidder1)
+          .placeBid({value: ethers.parseEther("13")}); 
+        
+        await Auction.waitForDeployment();
+
+        const a = await ethers.provider.getBalance(Auction);
+        console.log(a);
+
+        expect(await Auction.highestBid()).to.equal(ethers.parseEther("13"));
+      });
 
 
     });

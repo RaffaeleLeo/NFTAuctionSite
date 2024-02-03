@@ -22,11 +22,9 @@ contract Auction {
     uint256 public highestBid;
     // starting auction time
     uint256 public start;
-    // dictionary of the addresses who made an offert
-    mapping(address => uint256) public bids;
 
     event BidPlaced(address bidder, uint256 bidAmount);
-    event BidWithdrawn(address bidder, uint256 bidAmount);
+    event BidRefounded(address bidder, uint256 bidAmount);
     event AuctionTerminated(address winner,IERC721 nftContract, uint256 tokenId);
     event AuctionStarted(IERC721 nftContract);
 
@@ -58,28 +56,22 @@ contract Auction {
     // function to place a bid
     function placeBid() external payable {
         require(msg.sender != highestBidder, "You already have the highest bid");
+        require(msg.value > highestBid, "Bid amount is not higher than the current highest bid");
 
-        uint256 prevbidAmount = bids[msg.sender];
-        uint256 bidAmount = msg.value;
+        uint256 previousBid = highestBid; // Salviamo l'offerta precedente
+        address previousBidder = highestBidder; // Salviamo il precedente offerente
 
-        //there is a previous bid
-        if(prevbidAmount>0){
-            bidAmount +=prevbidAmount;
-        }
-
-        require(bidAmount > highestBid, "Bid amount is not higher than the current highest bid");
-        // if there is at least one offert
-        if (highestBidder != address(0)) {
-            console.log("bids[highestBidder]",bids[highestBidder]);
-            // update the dictionary with losing bidders
-            bids[highestBidder] += highestBid;
-        }
-        // update the highest offert
+        // Aggiorniamo l'offerta più alta e l'offerente più alto
         highestBidder = msg.sender;
-        highestBid = bidAmount;
+        highestBid = msg.value;
+
+        // Rimborso il precedente offerente
+        if (previousBidder != address(0)) {
+            payable(previousBidder).transfer(previousBid);
+            emit BidRefounded(previousBidder, previousBid);
+        }
 
         emit BidPlaced(msg.sender, highestBid);
-        console.log("highestBid,highestBidder",highestBid,highestBidder);
 
     }
 
@@ -98,17 +90,6 @@ contract Auction {
         emit AuctionTerminated(highestBidder,nftContract,tokenId);
     }
 
-    // function when the auction is over for the losers
-    function withdrawBid() external {
-        require(msg.sender != highestBidder, "You cannot withdraw the highest bid");
-        uint256 bidAmount = bids[msg.sender];
-        require(bidAmount > 0, "No bid to withdraw");
-        bids[msg.sender] = 0;
-        payable(msg.sender).transfer(bidAmount);
-        emit BidWithdrawn(msg.sender, highestBid);
-        console.log("highestBid,highestBidder",highestBid,highestBidder);
-
-    }
     // * receive function
     receive() external payable {}
 
