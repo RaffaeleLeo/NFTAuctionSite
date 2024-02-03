@@ -22,7 +22,7 @@
         <p id="walletAddress"></p>
 
         
-        <p>highest bid</p>
+        <p id = "highestBidTitle">highest bid</p>
         <!-- 
         <p>highest bidder</p>
         <p id="highestBidder"></p>
@@ -90,14 +90,42 @@
 
             // Start the app
             // mintNFT();
-            displayNFT(1);
+            console.log(await endedAuction());
+            if(! await endedAuction()){
+                displayNFT(1);
+            }
+            //auction ended
+            else{
+                document.getElementById('nftDisplay').style.display= 'none';
+                document.getElementById('bidButton').style.display= 'none';
+                document.getElementById('withdrawbidButton').style.display= 'none';
+                document.getElementById('offerValue').style.display= 'none';
+                document.getElementById('highestBidTitle').style.display= 'none';
+
+                highestBid.innerText = "There are no auction at the moment"
+                console.log("qui");
+            }
             // displayhighestBid();
         });
 
+        async function endedAuction(){
+            await Auctioncontract.getPastEvents("AuctionTerminated",{
+                fromBlock:"earliest",
+                toBlock:"latest"
+            }, function(error, events){ console.log("errore"); })
+            .then(function(events){
+                if(events.length !=0){
+                    print("fine");
+                    return true;
+                }
+            });
+            return false;
+        }
+
         async function endAuction(){
             // Check if the user's wallet address is set
-            console.log(window.userWalletAddress);
-            0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266
+            // console.log(window.userWalletAddress);
+            // 0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266
             if (window.userWalletAddress == "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266".toLowerCase()) {
                 
                 Auctioncontract.methods.finalizeAuction().send({from:window.userWalletAddress})
@@ -118,8 +146,8 @@
             var hbid = await Auctioncontract.methods.highestBid().call();
             highestBid.innerText = await web3.utils.fromWei(hbid, "ether");
             var hbidder = await Auctioncontract.methods.highestBidder().call();
-            console.log(hbidder);
-            console.log(window.userWalletAddress);
+            // console.log(hbidder);
+            // console.log(window.userWalletAddress);
             if (hbidder.toLowerCase() == window.userWalletAddress.toLowerCase()){
                 highestBidder.innerText = "you are winning the auction";
 
@@ -131,11 +159,12 @@
                 toBlock:"latest"
             }, function(error, events){ console.log("errore"); })
             .then(function(events){
+                console.log(events);
                 if(events.length !=0){
                     latestBid.innerText= "you bid for a total of "+web3.utils.fromWei(events[events.length -1].returnValues.bidAmount,"ether")+ " ethers";
 
                 }else{
-                    latestBid.innerText = "you have not yet bid an offer"
+                    latestBid.innerText = "you have not placed a bid yet"
                 }
                 // console.log(mylatestbid) // same results as the optional callback above
                 // console.log(web3.utils.fromWei(mylatestbid,"ether"))
@@ -152,11 +181,10 @@
                     let winner = events[events.length -1].returnValues.winner;
                     let contract = events[events.length -1].returnValues.nftContract;
                     let tokenId = events[events.length -1].returnValues.tokenId;
-                    console.log(winner.toLowerCase());
-                    console.log(window.userWalletAddress);
                     if (winner.toLowerCase() == window.userWalletAddress){
-                        finished.innerText = "Congratulations you won the NFT\n NFTaddress: "+contract+" \n TokenID: "+tokenId;
+                        highestBidder.innerText = "Congratulations you won the NFT\n NFTaddress: "+contract+" \n TokenID: "+tokenId;
                     }
+                    document.getElementById('bidButton').style.display= 'none';
  
                 }else{
                     console.log("asta non finita");
@@ -284,9 +312,13 @@
 
         async function adjustUIForUserRole() {
             const isOwner = window.userWalletAddress === auctionOwnerAddress;
+            const hbidder = await Auctioncontract.methods.highestBidder().call();
+            const isHigestBidder = window.userWalletAddress === hbidder.toLowerCase();
             // Adjust UI elements based on the user role
             document.getElementById('endauction').style.display = isOwner ? 'block' : 'none';
-            document.getElementById('withdrawbidButton').style.display = isOwner ? 'none' : 'block';
+            document.getElementById('withdrawbidButton').style.display = isOwner|isHigestBidder ? 'none' : 'block';
+            document.getElementById('highestBidTitle').style.display= 'block';
+
 
             // Add or modify other elements as needed for owner
             // For participants, you can either hide or show elements, or modify text/content
