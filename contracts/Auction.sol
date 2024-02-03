@@ -26,6 +26,7 @@ contract Auction {
     mapping(address => uint256) public bids;
 
     event BidPlaced(address bidder, uint256 bidAmount);
+    event BidWithdrawn(address bidder, uint256 bidAmount);
     event AuctionTerminated(address winner,IERC721 nftContract, uint256 tokenId);
     event AuctionStarted(IERC721 nftContract);
 
@@ -69,6 +70,7 @@ contract Auction {
         require(bidAmount > highestBid, "Bid amount is not higher than the current highest bid");
         // if there is at least one offert
         if (highestBidder != address(0)) {
+            console.log("bids[highestBidder]",bids[highestBidder]);
             // update the dictionary with losing bidders
             bids[highestBidder] += highestBid;
         }
@@ -77,6 +79,8 @@ contract Auction {
         highestBid = bidAmount;
 
         emit BidPlaced(msg.sender, highestBid);
+        console.log("highestBid,highestBidder",highestBid,highestBidder);
+
     }
 
 
@@ -101,6 +105,9 @@ contract Auction {
         require(bidAmount > 0, "No bid to withdraw");
         bids[msg.sender] = 0;
         payable(msg.sender).transfer(bidAmount);
+        emit BidWithdrawn(msg.sender, highestBid);
+        console.log("highestBid,highestBidder",highestBid,highestBidder);
+
     }
     // * receive function
     receive() external payable {}

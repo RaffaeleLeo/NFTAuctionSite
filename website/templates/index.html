@@ -147,13 +147,15 @@
         async function displayhighestBid(){
             
             var hbid = await Auctioncontract.methods.highestBid().call();
+            console.log(hbid);
             highestBid.innerText = await web3.utils.fromWei(hbid, "ether");
             var hbidder = await Auctioncontract.methods.highestBidder().call();
             // console.log(hbidder);
             // console.log(window.userWalletAddress);
             if (hbidder.toLowerCase() == window.userWalletAddress.toLowerCase()){
                 highestBidder.innerText = "you are winning the auction";
-
+            }else{
+                highestBidder.innerText="you are not the highest bidder";
             }
             //read aucitonstarted event
             Auctioncontract.getPastEvents("AuctionStarted",{
@@ -183,13 +185,27 @@
                 console.log(events);
                 if(events.length !=0){
                     latestBid.innerText= "you bid for a total of "+web3.utils.fromWei(events[events.length -1].returnValues.bidAmount,"ether")+ " ethers";
-
                 }else{
                     latestBid.innerText = "you have not placed a bid yet"
                 }
                 // console.log(mylatestbid) // same results as the optional callback above
                 // console.log(web3.utils.fromWei(mylatestbid,"ether"))
             });
+            //read BidWithdrawn event
+            Auctioncontract.getPastEvents("BidWithdrawn",{
+                filter: {bidder : window.userWalletAddress},
+                fromBlock:"earliest",
+                toBlock:"latest"
+            }, function(error, events){ console.log("errore"); })
+            .then(function(events){
+                console.log(events);
+                if(events.length !=0){
+                    latestBid.innerText= "you have withdrawn the bid";
+                }
+                // console.log(mylatestbid) // same results as the optional callback above
+                // console.log(web3.utils.fromWei(mylatestbid,"ether"))
+            });
+
             //read AuctionTerminated
             Auctioncontract.getPastEvents("AuctionTerminated",{
                 fromBlock:"earliest",
@@ -206,10 +222,6 @@
                         highestBidder.innerText = "Congratulations you won the NFT\n NFTaddress: "+contract+" \n TokenID: "+tokenId;
                     }
                     document.getElementById('bidButton').style.display= 'none';
- 
-                }else{
-                    console.log("asta non finita");
-
                 }
                 // console.log(mylatestbid) // same results as the optional callback above
                 // console.log(web3.utils.fromWei(mylatestbid,"ether"))
@@ -341,24 +353,41 @@
         }
 
         async function adjustUIForUserRole() {
+
+            Auctioncontract.getPastEvents("AuctionStarted",{
+                fromBlock:"earliest",
+                toBlock:"latest"
+            }, function(error, events){ console.log("errore"); })
+            .then(function(events){
+                if(events.length !=0){
+                    auctionStarted = true;
+                }
+            });
+
             console.log("adjusting screen")
             const isOwner = window.userWalletAddress === auctionOwnerAddress.toLowerCase();
             const hbidder = await Auctioncontract.methods.highestBidder().call();
             const isHigestBidder = window.userWalletAddress === hbidder.toLowerCase();
+            const isConnected = window.userWalletAddress !=null;
+            console.log("isconnected",isConnected);
             // Adjust UI elements based on the user role
-            document.getElementById('bidButton').style.display= auctionStarted && !isOwner ? 'block': 'none';
-            document.getElementById('withdrawbidButton').style.display= auctionStarted && !isOwner && !isHigestBidder ? 'block': 'none';
-            document.getElementById('offerValue').style.display= auctionStarted && !isOwner ? 'block': 'none';
-            document.getElementById('highestBidTitle').style.display= auctionStarted ? 'block': 'none';
+            document.getElementById('bidButton').style.display= auctionStarted && !isOwner && isConnected ? 'block': 'none';
+            document.getElementById('withdrawbidButton').style.display= auctionStarted && !isOwner && !isHigestBidder && isConnected ? 'block': 'none';
+            document.getElementById('offerValue').style.display= auctionStarted && !isOwner && isConnected ? 'block': 'none';
+            document.getElementById('highestBidTitle').style.display= auctionStarted && isConnected? 'block': 'none';
 
-            document.getElementById('highestBid').style.display = auctionStarted ? 'block' : 'none';
-            document.getElementById('latestBid').style.display = auctionStarted && !isOwner ? 'block' : 'none';
+            document.getElementById('highestBid').style.display = auctionStarted && isConnected ? 'block' : 'none';
+            document.getElementById('latestBid').style.display = auctionStarted && !isOwner && isConnected ? 'block' : 'none';
 
             document.getElementById('endauction').style.display = auctionStarted && isOwner ? 'block' : 'none';
             document.getElementById('nftDisplay').style.display= auctionStarted? 'block': 'none';
-            document.getElementById('startAuctionButton').style.display = isOwner ? 'block' : 'none';
+            document.getElementById('startAuctionButton').style.display = isOwner &&!auctionStarted ? 'block' : 'none';
             // Add or modify other elements as needed for owner
             // For participants, you can either hide or show elements, or modify text/content
+            document.getElementById('highestBidder').style.display= isConnected && auctionStarted? 'block': 'none';
+
+            
+
         }
 
         async function connectWalletwithMetaMask() {
@@ -399,6 +428,7 @@
                 console.log(NFTcontractAddress)
                 const transactionReceipt = await Auctioncontract.methods.begin(NFTcontractAddress, tokenId, reservePrice).send({from: window.userWalletAddress});
                 console.log('Auction started successfully:', transactionReceipt);
+                adjustUIForUserRole();
             } catch (error) {
                 console.error('Error starting the auction:', error);
             }
@@ -406,7 +436,8 @@
 
 
         function signOutOfMetaMask() {
-            window.userwalletAddress = null
+            window.userWalletAddress = null;
+            adjustUIForUserRole();
             walletAddress.innerText = ''
             connectWallet.innerText = 'Connect Wallet'
 
@@ -416,6 +447,7 @@
             setTimeout(() => {
             connectWallet.addEventListener('click', connectWalletwithMetaMask)
             }, 200  )
+
         }
 
         async function checkBalance() {
