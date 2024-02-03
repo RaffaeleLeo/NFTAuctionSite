@@ -17,3 +17,4 @@ npx hardhat node
 <!-- npx hardhat run scripts/mint-nfts.ts --network localhost -->
 npx hardhat run scripts/auctionDeploy.ts --network localhost
 copy target into contract address into index.html
+npx hardhat run scripts/auctionDeployAndStart.ts --network localhost

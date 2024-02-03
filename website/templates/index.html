@@ -29,6 +29,8 @@
         -->
         <p id="highestBid"></p>
         <p id="highestBidder"></p>
+        <p id="latestBid"></p>
+
        
         <section>
             <h2>Featured NFTs</h2>
@@ -87,7 +89,7 @@
             // Start the app
             // mintNFT();
             displayNFT(1);
-            //displayhighestBid();
+            // displayhighestBid();
         });
 
         async function endAuction(){
@@ -120,7 +122,22 @@
                 highestBidder.innerText = "you are winning the auction";
 
             }
-            
+            Auctioncontract.getPastEvents("BidPlaced",{
+                filter: {bidder : window.userWalletAddress},
+                fromBlock:"earliest",
+                toBlock:"latest"
+            }, function(error, events){ console.log("errore"); })
+            .then(function(events){
+                console.log(events);
+                if(events.length !=0){
+                    latestBid.innerText= "you bid for a total of "+web3.utils.fromWei(events[events.length -1].returnValues.bidAmount,"ether")+ " ethers";
+
+                }else{
+                    latestBid.innerText = "you have not yet bid an offer"
+                }
+                // console.log(mylatestbid) // same results as the optional callback above
+                // console.log(web3.utils.fromWei(mylatestbid,"ether"))
+            });
         };
         //bids for the auction
         async function bid(){
