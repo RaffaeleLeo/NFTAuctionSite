@@ -26,6 +26,7 @@ contract Auction {
     mapping(address => uint256) public bids;
 
     event BidPlaced(address bidder, uint256 bidAmount);
+    event AuctionTerminated(address winner,IERC721 nftContract, uint256 tokenId);
 
     modifier onlyOwner() {
         require(msg.sender == owner, "Not the owner");
@@ -87,6 +88,8 @@ contract Auction {
         nftContract.safeTransferFrom(owner, highestBidder, tokenId);
         // Transfer funds to the auction owner
         payable(owner).transfer(highestBid);
+
+        emit AuctionTerminated(highestBidder,nftContract,tokenId);
     }
 
     // function when the auction is over for the losers

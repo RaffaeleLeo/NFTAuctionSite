@@ -30,6 +30,8 @@
         <p id="highestBid"></p>
         <p id="highestBidder"></p>
         <p id="latestBid"></p>
+        <p id="finished"></p>
+
 
        
         <section>
@@ -122,18 +124,43 @@
                 highestBidder.innerText = "you are winning the auction";
 
             }
+            //read bidPlaced event
             Auctioncontract.getPastEvents("BidPlaced",{
                 filter: {bidder : window.userWalletAddress},
                 fromBlock:"earliest",
                 toBlock:"latest"
             }, function(error, events){ console.log("errore"); })
             .then(function(events){
-                console.log(events);
                 if(events.length !=0){
                     latestBid.innerText= "you bid for a total of "+web3.utils.fromWei(events[events.length -1].returnValues.bidAmount,"ether")+ " ethers";
 
                 }else{
                     latestBid.innerText = "you have not yet bid an offer"
+                }
+                // console.log(mylatestbid) // same results as the optional callback above
+                // console.log(web3.utils.fromWei(mylatestbid,"ether"))
+            });
+            //read AuctionTerminated
+            Auctioncontract.getPastEvents("AuctionTerminated",{
+                fromBlock:"earliest",
+                toBlock:"latest"
+            }, function(error, events){ console.log("errore"); })
+            .then(function(events){
+                console.log(events);
+                if(events.length !=0){ 
+                    console.log("asta finita");
+                    let winner = events[events.length -1].returnValues.winner;
+                    let contract = events[events.length -1].returnValues.nftContract;
+                    let tokenId = events[events.length -1].returnValues.tokenId;
+                    console.log(winner.toLowerCase());
+                    console.log(window.userWalletAddress);
+                    if (winner.toLowerCase() == window.userWalletAddress){
+                        finished.innerText = "Congratulations you won the NFT\n NFTaddress: "+contract+" \n TokenID: "+tokenId;
+                    }
+ 
+                }else{
+                    console.log("asta non finita");
+
                 }
                 // console.log(mylatestbid) // same results as the optional callback above
                 // console.log(web3.utils.fromWei(mylatestbid,"ether"))
