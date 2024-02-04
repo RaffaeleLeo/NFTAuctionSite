@@ -14,6 +14,8 @@
     <main>
         <input type="text" id="nftImageUrl" placeholder="IPFS URL of NFT Image" />
         <input type="text" id="nftMetadataUrl" placeholder="IPFS URL of Metadata JSON" />
+        <input type="number" id="minprice" placeholder="Insert minimum starting price" style="display: none;">
+
         <button id="mintButton">Mint NFT and Start Auction</button>
         
         <button id='connectWallet' onclick="">Connect Wallet</button>
@@ -62,7 +64,7 @@
         let auctionStarted = false;
         let currentNFT = 1;
         // Define the auction owner's address for comparison
-        let auctionOwnerAddress = "0x";
+        let auctionOwnerAddress;
 
         window.addEventListener('load', async () => {
             // Initialize web3
@@ -96,7 +98,7 @@
 
             // Start the app
             // mintNFT();
-            adjustUIForUserRole();
+            await adjustUIForUserRole();
             if(auctionStarted){
                 displayNFT(currentNFT);
             }
@@ -169,7 +171,9 @@
                 if(event.event == "AuctionStarted"){
 
                     console.log("AuctionstartedEvent");
-                    latestBid.innerText= "you can now place your bid";
+                    const prezzoMinimo = event.returnValues.minPrice;
+                    auctionOwnerAddress = event.returnValues.owner;
+                    latestBid.innerText= "The first bid has to be at least " +prezzoMinimo+" eths";
                     auctionStarted = true;
 
                 }
@@ -177,6 +181,8 @@
                 if(event.event == "BidPlaced" && event.returnValues.bidder.toLowerCase()==window.userWalletAddress ){
                     console.log("bidplacedEvent");
                     latestBid.innerText= "";
+                    document.getElementById("bidButton").disabled = true; // Disabilita il pulsante
+
 
                 }else if(event.event == "BidPlaced" && event.returnValues.bidder.toLowerCase()!=window.userWalletAddress ){
                     console.log("qui");
@@ -371,7 +377,10 @@
             if(auctionStarted){
                 hbidder = await Auctioncontract.methods.highestBidder().call();
             }
-            const isOwner = window.userWalletAddress === auctionOwnerAddress.toLowerCase();
+            let isOwner = false;
+            if(auctionStarted){
+                isOwner = window.userWalletAddress === auctionOwnerAddress.toLowerCase();
+            }
             
             console.log("here1")
             const isHigestBidder = window.userWalletAddress === hbidder.toLowerCase();
@@ -393,6 +402,7 @@
 
             document.getElementById('nftImageUrl').style.display= isConnected && !auctionStarted? 'block': 'none';
             document.getElementById('nftMetadataUrl').style.display= isConnected && !auctionStarted? 'block': 'none';
+            document.getElementById('minprice').style.display= isConnected && !auctionStarted? 'block': 'none';
             document.getElementById('mintButton').style.display= isConnected && !auctionStarted ? 'block': 'none';
         }
 
@@ -427,10 +437,12 @@
             }
             // await new Promise(r => setTimeout(r, 10000));
 
+            var minPrice= document.getElementById("minprice").value;
+
             console.log("start auction")
             // This assumes you have a function in your Auction contract to start the auction, adjust as necessary
             // Example: AuctionContract.methods.startAuction(parameters...).send({from: window.userWalletAddress})
-            const minPrice = web3.utils.toWei('2', 'ether'); // Example reserve price, adjust as necessary
+            minPrice = web3.utils.toWei(minPrice, 'ether'); // Example reserve price, adjust as necessary
             console.log('token:', currentNFT)
             try {
                 console.log(NFTcontractAddress)

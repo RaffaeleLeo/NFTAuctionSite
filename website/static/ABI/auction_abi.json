@@ -12,6 +12,18 @@
         "internalType": "contract IERC721",
         "name": "nftContract",
         "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "minPrice",
+        "type": "uint256"
       }
     ],
     "name": "AuctionStarted",
