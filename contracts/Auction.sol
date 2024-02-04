@@ -42,10 +42,11 @@ contract Auction {
 
     //constructor of the auction
     constructor(){
-        owner = msg.sender;
     }
     //begins an auction
-    function begin(address _nftContract, uint256 _tokenId, uint256 _minPrice) external onlyOwner {
+    function begin(address _nftContract, uint256 _tokenId, uint256 _minPrice) external {
+        owner = msg.sender;
+        console.log("owner",owner);
         nftContract = IERC721(_nftContract);
         tokenId = _tokenId;
         minPrice = _minPrice;
