@@ -63,6 +63,9 @@
         let Auctioncontract;
         let auctionStarted = false;
         let currentNFT = 1;
+
+        let NFTjsonData;
+        let AuctionjsonData;
         // Define the auction owner's address for comparison
         let auctionOwnerAddress;
 
@@ -75,7 +78,7 @@
                 window.web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
             }
 
-            let NFTjsonData;
+            
             try {
                 let response = await fetch('{{ url_for("static", filename="ABI/mint_nft_abi.json") }}');
                 NFTjsonData = await response.json(); // Await the JSON parsing
@@ -83,24 +86,25 @@
                 console.log(e.message);
                 return; // Exit the function if an error occurs
             }
-            let AuctionjsonData;
+            
             try {
                 let response = await fetch('{{ url_for("static", filename="ABI/auction_abi.json") }}');
                 AuctionjsonData = await response.json(); // Await the JSON parsing
+
             } catch (e) {
                 console.log(e.message);
                 return; // Exit the function if an error occurs
             }
-            NFTcontractAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
-            AuctioncontractAddress = '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512';
-            NFTcontract = new web3.eth.Contract(NFTjsonData, NFTcontractAddress); // Use jsonData here
-            Auctioncontract = new web3.eth.Contract(AuctionjsonData, AuctioncontractAddress); // Use jsonData here
+            // NFTcontractAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+            // AuctioncontractAddress = '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512';
+            // NFTcontract = new web3.eth.Contract(NFTjsonData, NFTcontractAddress); // Use jsonData here
+            // Auctioncontract = new web3.eth.Contract(AuctionjsonData, AuctioncontractAddress); // Use jsonData here
 
             // Start the app
             // mintNFT();
             await adjustUIForUserRole();
             if(auctionStarted){
-                displayNFT(currentNFT);
+                displayNFT();
             }
             //auction ended
             else{
@@ -115,38 +119,66 @@
             // displayhighestBid();
         });
 
+        async function deployContract(abi, bytecode) {
+            const myAccount = window.userWalletAddress;
+            const MyContract = new web3.eth.Contract(abi);
+
+            // Using a Promise to ensure we can use async/await with web3.eth.Contract deployment
+            const newContractInstance = await new Promise((resolve, reject) => {
+                MyContract.deploy({
+                    data: bytecode,
+                    arguments: [] // Constructor arguments go here
+                })
+                .send({
+                    from: myAccount,
+                    gas: '4700000' // Adjust gas limit as necessary
+                })
+                .on('transactionHash', function(transactionHash){
+                    console.log("Transaction hash:", transactionHash);
+                })
+                .on('error', function(error){
+                    reject(error);
+                })
+                .then(function(newContractInstance){
+                    console.log("Contract deployed at:", newContractInstance.options.address);
+                    resolve(newContractInstance);
+                });
+            });
+
+    // Since you're using await, you can return the newContractInstance directly
+    return newContractInstance;
+}
+
+
         async function endedAuction(){
             var result = false;
-            await Auctioncontract.getPastEvents("AuctionTerminated",{
-                fromBlock:"earliest",
-                // toBlock:"latest"
-            }, function(error, events){ console.log("errore"); })
-            .then(function(events){
-                if(events.length !=0){
-                    result=true;
-                }
-            });
+            try{
+                await Auctioncontract.getPastEvents("AuctionTerminated",{
+                    fromBlock:"earliest",
+                    // toBlock:"latest"
+                })
+                .then(function(events){
+                    if(events.length !=0){
+                        result=true;
+                    }
+                });
+            }
+            catch{
+                console.log('contract not loaded')
+            }
             return result;
         }
 
         async function endAuction(){
             // Check if the user's wallet address is set
-            // console.log(window.userWalletAddress);
-            // 0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266
-            if (window.userWalletAddress == "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266".toLowerCase()) {
-                
-                Auctioncontract.methods.finalizeAuction().send({from:window.userWalletAddress})
-                    .on('receipt', async (receipt) => {
-                        console.log('Auction Bid. Transaction Receipt:', receipt);
-                        displayhighestBid();
-                    })
-                    .on('error', error => {
-                        console.error('Error bidding the auction:', error);
-                    });
-            }
-            else{
-                console.log("only the creator can end the auction")
-            };
+            Auctioncontract.methods.finalizeAuction().send({from:window.userWalletAddress})
+                .on('receipt', async (receipt) => {
+                    console.log('Auction Bid. Transaction Receipt:', receipt);
+                    displayhighestBid();
+                })
+                .on('error', error => {
+                    console.error('Error bidding the auction:', error);
+                });
         }
         async function displayhighestBid(){
             // console.log("pending transactions",await web3.getPendingTransactions());
@@ -233,16 +265,18 @@
                 console.error('No NFT metadata URL provided');
                 return;
             }
-            console.log(window.userWalletAddress)
-            console.log(nftMetadataUrl)
+            console.log(window.userWalletAddress);
+            console.log(nftMetadataUrl);
+            NFTcontract = await deployContract(NFTjsonData.abi, NFTjsonData.bytecode);
+            console.log(NFTcontract)
             // Assuming the `mintNFT` function of your contract takes the metadata URL directly
             NFTcontract.methods.mintNFT(window.userWalletAddress, nftMetadataUrl).send({ from: window.userWalletAddress })
                 .on('receipt', async (receipt) => {
                     console.log('Minted NFT. Transaction Receipt:', receipt);
 
                     currentNFT = await NFTcontract.methods.getCurrentTokenId().call();
-                    displayNFT(currentNFT);
-                    startAuction(currentNFT);
+                    displayNFT();
+                    startAuction();
                 })
                 .on('error', error => {
                     console.error('Error minting NFT:', error);
@@ -250,8 +284,8 @@
         }
 
 
-        async function displayNFT(tokenId) {
-            console.log("Token ID:", tokenId);
+        async function displayNFT() {
+            const tokenId =  await NFTcontract.methods.getCurrentTokenId().call();
             const tokenURI = await NFTcontract.methods.tokenURI(tokenId).call();
             console.log("Token URI:", tokenURI);
 
@@ -358,33 +392,42 @@
         }
 
         async function adjustUIForUserRole() {
+            try{
+                await Auctioncontract.getPastEvents("AuctionStarted",{
+                    fromBlock:"earliest",
+                    // toBlock:"latest"
+                })
+                .then(function(events){
+                    console.log(events);
+                    if(events.length !=0){
+                        console.log(events)
+                        auctionStarted = true;
+                        auctionOwnerAddress = events[events.length-1].returnValues.owner;
+                    }
+                });
+            }
+            catch{
+                console.log('contract not loaded')
+            }
+           
             
-            await Auctioncontract.getPastEvents("AuctionStarted",{
-                fromBlock:"earliest",
-                // toBlock:"latest"
-            }, function(error, events){ console.log("errore"); })
-            .then(function(events){
-                console.log(events);
-                if(events.length !=0){
-                    console.log("here")
-                    auctionStarted = true;
-                }
-            });
 
             console.log("adjusting screen")
             console.log(auctionStarted)
             let hbidder = '0'
-            if(auctionStarted){
-                hbidder = await Auctioncontract.methods.highestBidder().call();
-            }
             let isOwner = false;
             if(auctionStarted){
+                displayNFT()
+                hbidder = await Auctioncontract.methods.highestBidder().call();
                 isOwner = window.userWalletAddress === auctionOwnerAddress.toLowerCase();
             }
-            
+
             console.log("here1")
             const isHigestBidder = window.userWalletAddress === hbidder.toLowerCase();
             const isConnected = window.userWalletAddress !=null;
+            if(!isConnected){
+                latestBid.innerText = "the auction is currently in progress";
+            }
             // console.log("isconnected",isConnected);
             // Adjust UI elements based on the user role
             document.getElementById('bidButton').style.display= auctionStarted && !isOwner && isConnected ? 'block': 'none';
@@ -392,7 +435,7 @@
             document.getElementById('highestBidTitle').style.display= auctionStarted && isConnected? 'block': 'none';
 
             document.getElementById('highestBid').style.display = auctionStarted && isConnected ? 'block' : 'none';
-            // document.getElementById('latestBid').style.display = !isOwner && !isHigestBidder ? 'block' : 'none';
+            document.getElementById('latestBid').style.display = !isOwner ? 'block' : 'none';
 
             document.getElementById('endauction').style.display = auctionStarted && isOwner ? 'block' : 'none';
             document.getElementById('nftDisplay').style.display= auctionStarted? 'block': 'none';
@@ -416,6 +459,7 @@
             if (!accounts) { return }
 
             window.userWalletAddress = accounts[0]
+            console.log(accounts)
             //walletAddress.innerText = window.userWalletAddress
 
             connectWallet.innerText = 'Sign Out'
@@ -436,6 +480,7 @@
                 return;
             }
             // await new Promise(r => setTimeout(r, 10000));
+            const tokenId = await NFTcontract.methods.getCurrentTokenId().call()
 
             var minPrice= document.getElementById("minprice").value;
 
@@ -443,11 +488,14 @@
             // This assumes you have a function in your Auction contract to start the auction, adjust as necessary
             // Example: AuctionContract.methods.startAuction(parameters...).send({from: window.userWalletAddress})
             minPrice = web3.utils.toWei(minPrice, 'ether'); // Example reserve price, adjust as necessary
-            console.log('token:', currentNFT)
+            console.log('token:', tokenId)
+            NFTcontractAddress = NFTcontract.options.address
+            Auctioncontract = await deployContract(AuctionjsonData.abi, AuctionjsonData.bytecode)
+            console.log('auciton contract address', Auctioncontract.options.address)
             try {
                 console.log(NFTcontractAddress)
-                await NFTcontract.methods.approve(AuctioncontractAddress, currentNFT);
-                const transactionReceipt = await Auctioncontract.methods.begin(NFTcontractAddress, currentNFT, minPrice).send({from: window.userWalletAddress});
+                const transactionReceipt = await Auctioncontract.methods.begin(NFTcontractAddress, tokenId, minPrice).send({from: window.userWalletAddress});
+                await NFTcontract.methods.approve(Auctioncontract.options.address, tokenId).send({ from: window.userWalletAddress });;
                 console.log('Auction started successfully:', transactionReceipt);
                 auctionStarted = true;
                 auctionOwnerAddress = window.userWalletAddress;
