@@ -63,6 +63,7 @@
         let Auctioncontract;
         let auctionStarted = false;
         let currentNFT = 1;
+        let prezzoMinimo;
 
         let NFTjsonData;
         let AuctionjsonData;
@@ -98,10 +99,20 @@
             // NFTcontractAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
             // AuctioncontractAddress = '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512';
             // NFTcontract = new web3.eth.Contract(NFTjsonData, NFTcontractAddress); // Use jsonData here
-            // Auctioncontract = new web3.eth.Contract(AuctionjsonData, AuctioncontractAddress); // Use jsonData here
 
             // Start the app
             // mintNFT();
+            // localStorage.removeItem('AuctionContractAddress');
+            //     localStorage.removeItem('NFTContractAddress');
+            AuctioncontractAddress= localStorage.getItem('AuctionContractAddress');
+            NFTcontractAddress= localStorage.getItem('NFTContractAddress');
+            console.log(AuctioncontractAddress,NFTcontractAddress);
+
+            if(AuctioncontractAddress!=null){
+                Auctioncontract = new web3.eth.Contract(AuctionjsonData.abi, AuctioncontractAddress);
+                NFTcontract = new web3.eth.Contract(NFTjsonData.abi, NFTcontractAddress); // Use jsonData here
+            }
+
             await adjustUIForUserRole();
             if(auctionStarted){
                 displayNFT();
@@ -179,6 +190,10 @@
                 .on('error', error => {
                     console.error('Error bidding the auction:', error);
                 });
+                localStorage.removeItem('AuctionContractAddress');
+                localStorage.removeItem('NFTContractAddress');
+
+
         }
         async function displayhighestBid(){
             // console.log("pending transactions",await web3.getPendingTransactions());
@@ -203,9 +218,9 @@
                 if(event.event == "AuctionStarted"){
 
                     console.log("AuctionstartedEvent");
-                    const prezzoMinimo = event.returnValues.minPrice;
+                    prezzoMinimo = event.returnValues.minPrice;
                     auctionOwnerAddress = event.returnValues.owner;
-                    latestBid.innerText= "The first bid has to be at least " +prezzoMinimo+" eths";
+                    latestBid.innerText= "The first bid has to be at least " +window.web3.utils.fromWei(prezzoMinimo, 'ether')+" eths";
                     auctionStarted = true;
 
                 }
@@ -231,6 +246,8 @@
                     let tokenId = event.returnValues.tokenId;
                     if (winner.toLowerCase() == window.userWalletAddress){
                         highestBidder.innerText = "Congratulations you won the NFT\n NFTaddress: "+contract+" \n TokenID: "+tokenId;
+                        localStorage.removeItem('AuctionContractAddress', Auctioncontract.options.address);
+                        localStorage.removeItem('NFTContractAddress', NFTcontractAddress);
                     }
                     document.getElementById('bidButton').style.display= 'none';
 
@@ -248,7 +265,8 @@
 
             console.log("offert",offert)
             const bidValue = web3.utils.toWei(offert.toString(), 'ether');
-            Auctioncontract.methods.placeBid().send({from: window.userWalletAddress, value: bidValue})
+            if(bidValue>prezzoMinimo){
+                Auctioncontract.methods.placeBid().send({from: window.userWalletAddress, value: bidValue})
                 .on('receipt', async (receipt) => {
                     console.log('Auction Bid. Transaction Receipt:', receipt);
                     displayhighestBid();
@@ -257,6 +275,11 @@
                     console.log("errore");
                     console.error('Error bidding the auction:', error);
                 })
+            }else{
+                errorMetamask("Bid is less than the minimum for this auction")
+                console.log("prezzoMinimo");
+            }
+            
         }
 
         async function mintNFT() {
@@ -348,7 +371,7 @@
         document.getElementById('mintButton').addEventListener('click', mintNFT);
 
 
-        function errorMetamask(){
+        function errorMetamask(content){
             console.log('No connected MetaMask account');
             const popup = document.createElement('div');
             popup.style.position = 'fixed';
@@ -363,6 +386,9 @@
                 popup.textContent = 'MetaMask isn\'t installed, please install it';
             }else{
                 popup.textContent = 'Connect MetaMask Wallet';
+            }
+            if(content!=null){
+                popup.textContent = content;
             }
 
             // Aggiunta del popup al documento
@@ -425,7 +451,7 @@
             console.log("here1")
             const isHigestBidder = window.userWalletAddress === hbidder.toLowerCase();
             const isConnected = window.userWalletAddress !=null;
-            if(!isConnected){
+            if(!isConnected && auctionStarted){
                 latestBid.innerText = "the auction is currently in progress";
             }
             // console.log("isconnected",isConnected);
@@ -492,10 +518,15 @@
             NFTcontractAddress = NFTcontract.options.address
             Auctioncontract = await deployContract(AuctionjsonData.abi, AuctionjsonData.bytecode)
             console.log('auciton contract address', Auctioncontract.options.address)
+
+            localStorage.setItem('AuctionContractAddress', Auctioncontract.options.address);
+            localStorage.setItem('NFTContractAddress', NFTcontractAddress);
+
+
             try {
                 console.log(NFTcontractAddress)
                 const transactionReceipt = await Auctioncontract.methods.begin(NFTcontractAddress, tokenId, minPrice).send({from: window.userWalletAddress});
-                await NFTcontract.methods.approve(Auctioncontract.options.address, tokenId).send({ from: window.userWalletAddress });;
+                await NFTcontract.methods.approve(Auctioncontract.options.address, tokenId).send({ from: window.userWalletAddress });
                 console.log('Auction started successfully:', transactionReceipt);
                 auctionStarted = true;
                 auctionOwnerAddress = window.userWalletAddress;
