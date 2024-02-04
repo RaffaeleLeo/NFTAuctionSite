@@ -98,7 +98,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "_reservePrice",
+        "name": "_minPrice",
         "type": "uint256"
       }
     ],
@@ -142,6 +142,19 @@
   },
   {
     "inputs": [],
+    "name": "minPrice",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "nftContract",
     "outputs": [
       {
@@ -171,19 +184,6 @@
     "name": "placeBid",
     "outputs": [],
     "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "reservePrice",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {

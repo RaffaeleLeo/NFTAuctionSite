@@ -15,7 +15,7 @@ contract Auction {
     // NFT ID
     uint256 public tokenId;
     // NFT floor price
-    uint256 public reservePrice;
+    uint256 public minPrice;
     // Current state of the auction identified by the address of the highest buyer
     address public highestBidder;
     // Value of the highest offert
@@ -45,10 +45,10 @@ contract Auction {
         owner = msg.sender;
     }
     //begins an auction
-    function begin(address _nftContract, uint256 _tokenId, uint256 _reservePrice) external onlyOwner {
+    function begin(address _nftContract, uint256 _tokenId, uint256 _minPrice) external onlyOwner {
         nftContract = IERC721(_nftContract);
         tokenId = _tokenId;
-        reservePrice = _reservePrice;
+        minPrice = _minPrice;
         start = block.timestamp;
         emit AuctionStarted(nftContract);
     }
@@ -65,6 +65,11 @@ contract Auction {
         highestBidder = msg.sender;
         highestBid = msg.value;
 
+        //first bid
+        if(previousBidder==address(0)){
+            require(msg.value >= minPrice, "The bid is lower than the minimum price for the Auction");
+        }
+
         // Rimborso il precedente offerente
         if (previousBidder != address(0)) {
             payable(previousBidder).transfer(previousBid);
@@ -79,9 +84,7 @@ contract Auction {
     // function when the auction is over for the winner
     function finalizeAuction() external onlyOwner {
         //commentati per i test rimuovere dopo
-        //require(block.timestamp >= start + 7 days, "Auction has not ended yet");
-        require(highestBid >= reservePrice, "Auction did not meet the reserve price");
-        
+        //require(block.timestamp >= start + 7 days, "Auction has not ended yet");        
         // Transfer NFT to the highest bidder
         nftContract.safeTransferFrom(owner, highestBidder, tokenId);
         // Transfer funds to the auction owner

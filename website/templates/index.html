@@ -171,12 +171,16 @@
                     latestBid.innerText = "the auction has not started yet";
                 };
 
-                if(event.event == "BidPlaced"){
+                if(event.event == "BidPlaced" && event.returnValues.bidder.toLowerCase()==window.userWalletAddress ){
                     console.log("bidplacedEvent");
-                    latestBid.innerText= "your previous bid was refounded";
-                }else{
-                    latestBid.innerText = "you have not placed a bid yet";
+                    latestBid.innerText= "";
+
+                }else if(event.event == "BidPlaced" && event.returnValues.bidder.toLowerCase()!=window.userWalletAddress ){
+                    console.log("qui");
+                    console.log(event.event,event.returnValues.bidder)
+                    latestBid.innerText= "your previous bid was refounded";                    
                 };
+
 
                 if(event.event == "AuctionTerminated"){
                     console.log("asta finita");
@@ -190,7 +194,7 @@
                     document.getElementById('bidButton').style.display= 'none';
 
                 }
-                // console.log("evento",event.event,event);
+                console.log("evento",event.event,event);
             });  
         };
         //bids for the auction
@@ -370,11 +374,11 @@
             // This assumes you have a function in your Auction contract to start the auction, adjust as necessary
             // Example: AuctionContract.methods.startAuction(parameters...).send({from: window.userWalletAddress})
             const tokenId = 1; // The ID of the NFT to be auctioned, adjust as necessary
-            const reservePrice = web3.utils.toWei('0.1', 'ether'); // Example reserve price, adjust as necessary
+            const minPrice = web3.utils.toWei('2', 'ether'); // Example reserve price, adjust as necessary
             
             try {
                 console.log(NFTcontractAddress)
-                const transactionReceipt = await Auctioncontract.methods.begin(NFTcontractAddress, tokenId, reservePrice).send({from: window.userWalletAddress});
+                const transactionReceipt = await Auctioncontract.methods.begin(NFTcontractAddress, tokenId, minPrice).send({from: window.userWalletAddress});
                 console.log('Auction started successfully:', transactionReceipt);
                 adjustUIForUserRole();
             } catch (error) {
