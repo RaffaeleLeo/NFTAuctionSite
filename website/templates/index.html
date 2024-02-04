@@ -12,7 +12,6 @@
         <h1>Welcome to the NFT Auction Site</h1>
     </header>
     <main>
-        <input type="text" id="nftImageUrl" placeholder="IPFS URL of NFT Image" />
         <input type="text" id="nftMetadataUrl" placeholder="IPFS URL of Metadata JSON" />
         <input type="number" id="minprice" placeholder="Insert minimum starting price" style="display: none;">
 
@@ -285,7 +284,7 @@
         async function mintNFT() {
             const nftMetadataUrl = document.getElementById('nftMetadataUrl').value.trim();
             if (!nftMetadataUrl) {
-                console.error('No NFT metadata URL provided');
+                errorMetamask("Insert metadata URL");
                 return;
             }
             console.log(window.userWalletAddress);
@@ -469,7 +468,6 @@
             // For participants, you can either hide or show elements, or modify text/content
             document.getElementById('highestBidder').style.display= isConnected && auctionStarted &&!isOwner? 'block': 'none';
 
-            document.getElementById('nftImageUrl').style.display= isConnected && !auctionStarted? 'block': 'none';
             document.getElementById('nftMetadataUrl').style.display= isConnected && !auctionStarted? 'block': 'none';
             document.getElementById('minprice').style.display= isConnected && !auctionStarted? 'block': 'none';
             document.getElementById('mintButton').style.display= isConnected && !auctionStarted ? 'block': 'none';
