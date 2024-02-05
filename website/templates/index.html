@@ -45,13 +45,9 @@
        
         <section>
             <h2>Featured NFT</h2>
-            <!-- NFT items will be listed here -->
-            <!-- <div class="nft-item">
-                <img src="path_to_nft_image" alt="NFT Image">
-                <h3>NFT Title</h3>
-                <p>Description of the NFT.</p>
-                <a href="#">Place a Bid</a>
-            </div> -->
+            <div id = "noNFT">
+                <p>Currently there are no NFTs up for auction, you can connet your wallet to mint an NFT and start the auction</p>
+            </div>
             <div id="nftDisplay">
                 <h3 id="nftName"></h3>
                 <img id="nftImage" src="" alt="NFT Image">
@@ -127,7 +123,6 @@
                 document.getElementById('bidButton').style.display= 'none';
                 document.getElementById('offerValue').style.display= 'none';
                 document.getElementById('highestBidTitle').style.display= 'none';
-
                 highestBid.innerText = "There is no auction at the moment"
                 console.log("qui");
             }
@@ -493,6 +488,7 @@
             document.getElementById('mintButton').style.display= isConnected && !auctionStarted ? 'block': 'none';
 
             document.getElementById('auctionEndedSection').style.display = auctionEnded ? 'block': 'none';
+            document.getElementById('noNFT').style.display= !auctionStarted ? 'block' : 'none';
         }
 
         async function connectWalletwithMetaMask() {

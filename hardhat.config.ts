@@ -10,8 +10,12 @@ const config: HardhatUserConfig = {
       chainId:1137,
       // gas:"auto",
       // gasPrice:"auto"
-      // initialBaseFeePerGas: 0
     }
+  },
+  gasReporter:{
+    currency:"EUR",
+    token:"ETH",
+    gasPrice:30,
   }
 };
 

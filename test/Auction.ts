@@ -59,8 +59,8 @@ describe("Auction", function () {
       it("First Bid",async function () {
         const {Auction, bidder1} = await loadFixture(deploy);
         await Auction.connect(bidder1)
-          // .placeBid({value: ethers.parseEther("1")});
-          .placeBid({value: 1});
+          .placeBid({value: ethers.parseEther("1")});
+          // .placeBid({value: 1});
         // expect(await Auction.highestBid()).to.equal(1);
         expect(await Auction.highestBidder()).to.equal(bidder1);
       })
@@ -68,61 +68,49 @@ describe("Auction", function () {
       it("Should not allow lower bids", async function () {
         const {Auction, bidder1, bidder2} = await loadFixture(deploy);
         await Auction.connect(bidder1)
-          .placeBid({value: 2});
+          .placeBid({value: ethers.parseEther("2")});
 
         await expect(Auction.connect(bidder2)
-          .placeBid({value: 1}))
+          .placeBid({value: ethers.parseEther("1")}))
           .to.be.revertedWith("Bid amount is not higher than the current highest bid");
       });
 
       it("Increase bid", async function () {
         const {Auction, bidder1, bidder2} = await loadFixture(deploy);
         await Auction.connect(bidder1)
-          .placeBid({value: 1});
+          .placeBid({value: ethers.parseEther("1")});
         // const initialBidderBalance = await ethers.provider.getBalance(bidder1.address);
  
         await expect(Auction.connect(bidder2)
-          .placeBid({value: 20}));
+          .placeBid({value: ethers.parseEther("2")}));
         
         await Auction.waitForDeployment();
           
         expect(await Auction.highestBidder()).to.equal(bidder2);
       });
 
-      // it("Terminate Auction", async function () {
-      //   const {Auction,owner, bidder1, bidder2,NFT} = await loadFixture(deploy);
-      //   const winningBid = 900
-      //   await Auction.connect(bidder1)
-      //     .placeBid({value: 1});
+      it("Terminate Auction", async function () {
+        const {Auction,owner, bidder1, bidder2,NFT} = await loadFixture(deploy);
+        const initialBidderBalance = await ethers.provider.getBalance(bidder2);
+        await Auction.connect(bidder1)
+          .placeBid({value: ethers.parseEther("1")});
 
-      //   await expect(Auction.connect(bidder2)
-      //     .placeBid({value: winningBid}));
+        await expect(Auction.connect(bidder2)
+          .placeBid({value: ethers.parseEther("2")}));
 
-      //   // console.log(await time.latest());
-      //   //aspetta 7 giorni
-      //   // await time.increase(3600*24*7);
-      //   // console.log(await time.latest());
-      //   await Auction.waitForDeployment();
+        await Auction.waitForDeployment();
 
-      //   expect(await ethers.provider.getBalance(Auction)).to.be.equal(winningBid);
+        expect(await ethers.provider.getBalance(Auction)).to.be.equal(ethers.parseEther("2"));
 
 
 
-      //   const initialBidderBalance = await ethers.provider.getBalance(bidder2);
-      //   // const o1 = await ethers.provider.getBalance(owner.address);
-      //   // const a1 = await ethers.provider.getBalance(Auction);
-      //   // console.log(a1);
-      //   await Auction.connect(owner).finalizeAuction();
-      //   // await Auction.waitForDeployment();
-      //   // const o2 = await ethers.provider.getBalance(owner.address);
-      //   // const a2 = await ethers.provider.getBalance(Auction);
-      //   // // console.log(a2);
-      //   const finalBidderBalance = await ethers.provider.getBalance(bidder2.address);
-      //   expect(finalBidderBalance).to.be.lessThan(initialBidderBalance);
-      //   //New NFT owner = bidder2
-      //   expect(await NFT.ownerOf(1)).to.be.equal(bidder2);
+        await Auction.connect(owner).finalizeAuction();
+        const finalBidderBalance = await ethers.provider.getBalance(bidder2.address);
+        expect(finalBidderBalance).to.be.lessThan(initialBidderBalance);
+        //New NFT owner = bidder2
+        expect(await NFT.ownerOf(1)).to.be.equal(bidder2);
 
-      // });
+      });
 
       it("bidwar address", async function () {
         const {Auction, bidder1, bidder2} = await loadFixture(deploy);
