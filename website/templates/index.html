@@ -207,6 +207,8 @@
                 highestBidder.innerText = "you are winning the auction";
             }else{
                 highestBidder.innerText="you are not the highest bidder";
+                document.getElementById("bidButton").disabled = false; // Disabilita il pulsante
+
             }
             // read the events
             latestBid.innerText = "the auction has not started yet";
@@ -263,8 +265,13 @@
             var offert = document.getElementById("offerValue").value;
 
             console.log("offert",offert)
+            var hbid = await Auctioncontract.methods.highestBid().call();
             const bidValue = web3.utils.toWei(offert.toString(), 'ether');
-            if(bidValue>prezzoMinimo){
+            if(bidValue<=hbid){
+                console.log("latestBid",highestBid.innerText);
+                errorMetamask("Bid is less than the previous bid")
+                console.log("prezzoMinore");
+            }else if(bidValue>=prezzoMinimo){
                 Auctioncontract.methods.placeBid().send({from: window.userWalletAddress, value: bidValue})
                 .on('receipt', async (receipt) => {
                     console.log('Auction Bid. Transaction Receipt:', receipt);
@@ -273,7 +280,7 @@
                 .on('error', async(error) => {
                     console.log("errore");
                     console.error('Error bidding the auction:', error);
-                })
+                })                
             }else{
                 errorMetamask("Bid is less than the minimum for this auction")
                 console.log("prezzoMinimo");
@@ -450,7 +457,7 @@
             console.log("here1")
             const isHigestBidder = window.userWalletAddress === hbidder.toLowerCase();
             const isConnected = window.userWalletAddress !=null;
-            if(!isConnected && auctionStarted){
+            if(auctionStarted){
                 latestBid.innerText = "the auction is currently in progress";
             }
             // console.log("isconnected",isConnected);
