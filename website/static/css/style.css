@@ -20,15 +20,18 @@ main {
     box-sizing: border-box;
 }
 
+/* Button styling */
 button {
-    background-color: #3498db;
-    color: #ecf0f1;
+    background-color: #008cba;
+    color: white;
+    padding: 10px 20px;
+    margin: 10px 0;
     border: none;
-    padding: 10px;
-    margin: 5px;
     cursor: pointer;
-    font-size: 16px;
+    border-radius: 5px;
+    transition: background-color 0.3s;
 }
+
 button:disabled {
     background-color: lightgray; /* Cambia il colore di sfondo */
     color: darkgray; /* Cambia il colore del testo */
@@ -40,13 +43,16 @@ button:disabled {
 }
 
 button:hover {
-    background-color: #2980b9;
+    background-color: #005f73;
 }
 
-input {
+/* Input field styling */
+input[type="text"], input[type="number"] {
+    width: 100%;
     padding: 10px;
-    margin: 5px;
-    font-size: 16px;
+    margin: 10px 0;
+    border-radius: 5px;
+    border: 1px solid #ccc;
 }
 
 section {
@@ -57,11 +63,27 @@ h2 {
     color: #2c3e50;
 }
 
+/* NFT display styling */
 #nftDisplay {
-    border: 1px solid #bdc3c7;
-    padding: 15px;
-    margin-top: 15px;
-    background-color: #ecf0f1;
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-top: 20px;
+    text-align: center;
+}
+
+#nftDisplay img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+}
+
+/* Responsive design tweaks */
+@media (max-width: 600px) {
+    header, main {
+        padding: 10px;
+    }
 }
 
 p {
