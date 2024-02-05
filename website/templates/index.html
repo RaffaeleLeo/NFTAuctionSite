@@ -19,23 +19,28 @@
         
         <button id='connectWallet' onclick="">Connect Wallet</button>
         <!-- <button id="mintNFTButton">Mint NFT</button> -->
-        <button id="bidButton" style="display: none;">Bid</button>
-        <input type="number" id="offerValue" placeholder="Insert an offer" style="display: none;">
+        <!-- <button id="bidButton" style="display: none;">Bid</button>
+        <input type="number" id="offerValue" placeholder="Insert an offer" style="display: none;"> -->
         <button id="endauction" style="display: none;">End Auction</button>
 
         <p id="walletAddress"></p>
 
         
-        <p id = "highestBidTitle" style="display: none;">highest bid</p>
-        <!-- 
-        <p>highest bidder</p>
-        <p id="highestBidder"></p>
-        -->
-        <p id="highestBid"></p>
-        <p id="highestBidder"></p>
-        <p id="latestBid"> No Auction Has Been Started</p>
-        <p id="finished"></p>
+        <div id="bidSection" style="display: none;">
+            <p id="highestBidTitle">Highest Bid</p>
+            <p id="highestBid"></p>
+            <p id="highestBidder"></p>
+            <input type="number" id="offerValue" placeholder="Insert an offer">
+            <button id="bidButton">Bid</button>
+            <p id="latestBid">No Auction Has Been Started</p>
+        </div>
 
+        <div id="auctionEndedSection" style="display: none;">
+            <h2>Auction Ended</h2>
+            <p id="winnerAddress">Winner: <span>N/A</span></p>
+            <p id="finalBid">Final Bid: <span>0 ETH</span></p>
+            <p id="NFT_Winner" style="display: none;"></p>
+        </div>
 
        
         <section>
@@ -184,13 +189,14 @@
             Auctioncontract.methods.finalizeAuction().send({from:window.userWalletAddress})
                 .on('receipt', async (receipt) => {
                     console.log('Auction Bid. Transaction Receipt:', receipt);
+                    adjustUIForUserRole();
                     displayhighestBid();
                 })
                 .on('error', error => {
                     console.error('Error bidding the auction:', error);
                 });
-                localStorage.removeItem('AuctionContractAddress');
-                localStorage.removeItem('NFTContractAddress');
+                // localStorage.removeItem('AuctionContractAddress');
+                // localStorage.removeItem('NFTContractAddress');
 
 
         }
@@ -245,10 +251,17 @@
                     let winner = event.returnValues.winner;
                     let contract = event.returnValues.nftContract;
                     let tokenId = event.returnValues.tokenId;
+                    winnerAddress.innerText = "Highest Bidder: " + winner.toLowerCase();
+                    finalBid.innerText = "NFT Sold At " + highestBid.innerText + "ETH";
                     if (winner.toLowerCase() == window.userWalletAddress){
-                        highestBidder.innerText = "Congratulations you won the NFT\n NFTaddress: "+contract+" \n TokenID: "+tokenId;
+                        document.getElementById('NFT_Winner').style.display = 'block';
+                        NFT_Winner.innerText = "Congratulations you won the NFT\n NFTaddress: "+contract+" \n TokenID: "+tokenId;
                         localStorage.removeItem('AuctionContractAddress', Auctioncontract.options.address);
                         localStorage.removeItem('NFTContractAddress', NFTcontractAddress);
+                    }
+                    else{
+                        document.getElementById('NFT_Winner').style.display = 'none';
+                        document.getElementById('winnerAddress').style.display = 'none';
                     }
                     document.getElementById('bidButton').style.display= 'none';
 
@@ -443,9 +456,7 @@
             }
            
             
-
-            console.log("adjusting screen")
-            console.log(auctionStarted)
+            auctionEnded = await endedAuction();
             let hbidder = '0'
             let isOwner = false;
             if(auctionStarted){
@@ -459,17 +470,19 @@
             const isConnected = window.userWalletAddress !=null;
             if(auctionStarted){
                 latestBid.innerText = "the auction is currently in progress";
+
             }
             // console.log("isconnected",isConnected);
             // Adjust UI elements based on the user role
+            document.getElementById('bidSection').style.display = !auctionEnded && auctionStarted && isConnected ? 'block': 'none';
             document.getElementById('bidButton').style.display= auctionStarted && !isOwner && isConnected ? 'block': 'none';
-            document.getElementById('offerValue').style.display= auctionStarted && !isOwner && isConnected ? 'block': 'none';
+            document.getElementById('offerValue').style.display = auctionStarted && !isOwner && isConnected ? 'block': 'none';
             document.getElementById('highestBidTitle').style.display= auctionStarted && isConnected? 'block': 'none';
 
             document.getElementById('highestBid').style.display = auctionStarted && isConnected ? 'block' : 'none';
             document.getElementById('latestBid').style.display = !isOwner ? 'block' : 'none';
 
-            document.getElementById('endauction').style.display = auctionStarted && isOwner ? 'block' : 'none';
+            document.getElementById('endauction').style.display = !auctionEnded && auctionStarted && isOwner ? 'block' : 'none';
             document.getElementById('nftDisplay').style.display= auctionStarted? 'block': 'none';
             // Add or modify other elements as needed for owner
             // For participants, you can either hide or show elements, or modify text/content
@@ -478,6 +491,8 @@
             document.getElementById('nftMetadataUrl').style.display= isConnected && !auctionStarted? 'block': 'none';
             document.getElementById('minprice').style.display= isConnected && !auctionStarted? 'block': 'none';
             document.getElementById('mintButton').style.display= isConnected && !auctionStarted ? 'block': 'none';
+
+            document.getElementById('auctionEndedSection').style.display = auctionEnded ? 'block': 'none';
         }
 
         async function connectWalletwithMetaMask() {
@@ -526,7 +541,7 @@
 
             localStorage.setItem('AuctionContractAddress', Auctioncontract.options.address);
             localStorage.setItem('NFTContractAddress', NFTcontractAddress);
-
+            highestBid.innerText = "The auction is currently in progress"
 
             try {
                 console.log(NFTcontractAddress)

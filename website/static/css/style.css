@@ -123,3 +123,65 @@ img {
     border-radius: 5px;
     margin-bottom: 10px;
 }
+
+#bidSection {
+    background-color: #fff;
+    padding: 20px;
+    margin-top: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+#bidSection p {
+    margin: 10px 0;
+    color: #333;
+    font-size: 16px;
+}
+
+#bidSection input, #bidSection button {
+    margin-top: 10px;
+    width: 100%; /* Make input and button full width */
+    box-sizing: border-box; /* Include padding and border in element's width */
+}
+
+#offerValue {
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+#bidButton {
+    padding: 10px;
+    background-color: #008cba;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+}
+
+#bidButton:hover {
+    background-color: #418d9e;
+}
+
+#bidButton:disabled {
+    background-color: #92989a;
+}
+
+#auctionEndedSection {
+    background-color: #fff;
+    padding: 20px;
+    margin-top: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    text-align: center;
+}
+
+#auctionEndedSection h2 {
+    color: #333;
+}
+
+#auctionEndedSection p {
+    margin: 10px 0;
+    color: #666;
+}
