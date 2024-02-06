@@ -62,7 +62,6 @@
         let AuctioncontractAddress;
         let Auctioncontract;
         let auctionStarted = false;
-        let currentNFT = 1;
         let prezzoMinimo;
 
         let NFTjsonData;
@@ -137,11 +136,11 @@
             const newContractInstance = await new Promise((resolve, reject) => {
                 MyContract.deploy({
                     data: bytecode,
-                    arguments: [] // Constructor arguments go here
+                    arguments: [] 
                 })
                 .send({
                     from: myAccount,
-                    gas: '4700000' // Adjust gas limit as necessary
+                    gas: '4700000'
                 })
                 .on('transactionHash', function(transactionHash){
                     console.log("Transaction hash:", transactionHash);
@@ -155,9 +154,8 @@
                 });
             });
 
-    // Since you're using await, you can return the newContractInstance directly
-    return newContractInstance;
-}
+            return newContractInstance;
+        }
 
 
         async function endedAuction(){
@@ -302,16 +300,12 @@
                 errorMetamask("Insert metadata URL");
                 return;
             }
-            console.log(window.userWalletAddress);
-            console.log(nftMetadataUrl);
+
             NFTcontract = await deployContract(NFTjsonData.abi, NFTjsonData.bytecode);
-            console.log(NFTcontract)
-            // Assuming the `mintNFT` function of your contract takes the metadata URL directly
+
             NFTcontract.methods.mintNFT(window.userWalletAddress, nftMetadataUrl).send({ from: window.userWalletAddress })
                 .on('receipt', async (receipt) => {
                     console.log('Minted NFT. Transaction Receipt:', receipt);
-
-                    currentNFT = await NFTcontract.methods.getCurrentTokenId().call();
                     displayNFT();
                     startAuction();
                 })
@@ -517,33 +511,23 @@
         }
 
         async function startAuction() {
-            if (!window.userWalletAddress) {
-                console.log('Wallet not connected');
-                return;
-            }
-            // await new Promise(r => setTimeout(r, 10000));
             const tokenId = await NFTcontract.methods.getCurrentTokenId().call()
 
-            var minPrice= document.getElementById("minprice").value;
+            var minPrice = document.getElementById("minprice").value;
 
-            console.log("start auction")
-            // This assumes you have a function in your Auction contract to start the auction, adjust as necessary
-            // Example: AuctionContract.methods.startAuction(parameters...).send({from: window.userWalletAddress})
-            minPrice = web3.utils.toWei(minPrice, 'ether'); // Example reserve price, adjust as necessary
-            console.log('token:', tokenId)
+            minPrice = web3.utils.toWei(minPrice, 'ether');
+
             NFTcontractAddress = NFTcontract.options.address
             Auctioncontract = await deployContract(AuctionjsonData.abi, AuctionjsonData.bytecode)
-            console.log('auciton contract address', Auctioncontract.options.address)
 
             localStorage.setItem('AuctionContractAddress', Auctioncontract.options.address);
             localStorage.setItem('NFTContractAddress', NFTcontractAddress);
-            highestBid.innerText = "The auction is currently in progress"
 
+            highestBid.innerText = "The auction is currently in progress"
             try {
-                console.log(NFTcontractAddress)
                 const transactionReceipt = await Auctioncontract.methods.begin(NFTcontractAddress, tokenId, minPrice).send({from: window.userWalletAddress});
                 await NFTcontract.methods.approve(Auctioncontract.options.address, tokenId).send({ from: window.userWalletAddress });
-                console.log('Auction started successfully:', transactionReceipt);
+                
                 auctionStarted = true;
                 auctionOwnerAddress = window.userWalletAddress;
                 adjustUIForUserRole();
