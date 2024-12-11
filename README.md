@@ -1,20 +1,5 @@
-# Sample Hardhat Project
+# NFT Auction Cite
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a script that deploys that contract.
+This project was made to practice skills in coding a decentralized application.
 
-Try running some of the following tasks:
-
-```shell
-npx hardhat help
-npx hardhat test
-REPORT_GAS=true npx hardhat test
-npx hardhat node
-npx hardhat run scripts/deploy.ts
-```
-We need to replace "https://mytokenmetadata.com/nft/1" in the nft minting function with some actual metadata
-
-npx hardhat node
-<!-- npx hardhat run scripts/mint-nfts.ts --network localhost -->
-npx hardhat run scripts/auctionDeploy.ts --network localhost
-copy target into contract address into index.html
-npx hardhat run scripts/auctionDeployAndStart.ts --network localhost
+This was built using Hardhat to create the smart contracts and the NFT auction backend. We then used Flask/Typescript for the frontend.
